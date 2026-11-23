@@ -252,6 +252,11 @@ file(GLOB PROTO_FILES "src/network/proto/*.proto")
 # 手工声明生成步骤，规避 Visual Studio 下 protobuf::protoc 触发的 MSB8066。
 set(PROTO_SRCS)
 set(PROTO_HDRS)
+set(PROTO_OPTIONAL_COMPAT_ARG)
+if(Protobuf_VERSION VERSION_LESS "3.15.0")
+    # Ubuntu 22.04 ships protoc 3.12, where proto3 optional requires an opt-in.
+    set(PROTO_OPTIONAL_COMPAT_ARG --experimental_allow_proto3_optional)
+endif()
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/network/proto)
 # 清理历史生成位置，避免 include 命中旧的 build/robomaster.pb.h
 file(REMOVE
@@ -271,7 +276,8 @@ foreach(PROTO_FILE ${PROTO_FILES})
     add_custom_command(
         OUTPUT ${PROTO_HDR} ${PROTO_SRC}
         COMMAND ${Protobuf_PROTOC_EXECUTABLE}
-        ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/src/network/proto
+        ARGS ${PROTO_OPTIONAL_COMPAT_ARG}
+             --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/src/network/proto
              -I${CMAKE_CURRENT_SOURCE_DIR}/src/network/proto
              ${PROTO_FILE}
         DEPENDS ${PROTO_FILE}
