@@ -5,8 +5,8 @@
 Python，可在没有赛事引擎和机器人硬件时提供开发数据。
 
 > [!IMPORTANT]
-> 项目源代码采用 MIT License。开始贡献前请先阅读[贡献指南](../CONTRIBUTING.md)；新增第三方
-> 代码或素材时，仍需单独登记来源、许可证、授权范围和必要署名。
+> 项目源代码采用 MIT License。新增第三方代码或素材时，仍需单独登记来源、许可证、
+> 授权范围和必要署名。
 
 如果只是想运行项目，先看根目录的[快速开始](../README.md#快速开始)。本文重点说明修改代码
 时需要理解的边界和交付要求。
@@ -321,7 +321,7 @@ Windows PowerShell 的虚拟环境命令以及视频参数见模拟器说明。�
 - 现场地址、SSH 配置、账号、密钥、抓包和运行日志不得进入提交。
 - 真实链路问题不能只看客户端一端；有授权的联调应同时保留发送端与接收端证据，并写明
   时钟同步和采集限制。
-- 安全问题不要提交公开 issue，按[安全策略](../SECURITY.md)私下报告。
+- 安全问题不要提交公开 issue，应通过私下渠道联系维护者。
 
 普通功能开发不需要连接真实赛事环境。若问题只能在现场复现，应先提交脱敏日志和最小复现，
 由维护者确认授权、时间窗口和回退方案后再联调。
@@ -407,7 +407,7 @@ ctest --preset dev
 保持提交小而聚焦，不混入构建产物、个人配置、无关格式化或来源不明素材。不要写“所有测试
 通过”而不列出命令，也不要把没有运行的测试写成已完成。
 
-完整要求见[贡献指南](../CONTRIBUTING.md)和[编码规范](development/coding-style.md)。
+完整要求见[编码规范](development/coding-style.md)。
 
 ## 11. 发布前检查
 
@@ -421,7 +421,6 @@ python3 -m unittest discover -s tools/release/tests -p 'test_*.py' -v
 ## 相关文档
 
 - [项目 README](../README.md)
-- [贡献指南](../CONTRIBUTING.md)
 - [文档导航](README.md)
 - [系统架构概览](architecture/overview.md)
 - [组件职责与数据流](architecture/data-flow.md)

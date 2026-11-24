@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         感谢反馈。本项目并非 DJI 或 RoboMaster 官方项目，请勿在此报告官方系统问题。
-        提交前请删除真实 IP、主机名、账号、密钥路径、比赛编号和无关现场日志。安全漏洞请按照 SECURITY.md 私下报告。
+        提交前请删除真实 IP、主机名、账号、密钥路径、比赛编号和无关现场日志。安全漏洞请通过私下渠道联系维护者。
 
   - type: checkboxes
     id: precheck
