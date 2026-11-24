@@ -37,6 +37,14 @@ class TestMockMatchSource : public QObject {
     Q_OBJECT
 
 private slots:
+    void initTestCase() {
+        Q_INIT_RESOURCE(mock);
+    }
+
+    void cleanupTestCase() {
+        Q_CLEANUP_RESOURCE(mock);
+    }
+
     void allBundledScenariosLoad() {
         for (const QString &fileName :
              {QStringLiteral("match_3v3_basic.json"),
@@ -167,6 +175,32 @@ private slots:
         QVERIFY(source.advanceByMs(1000));
         QCOMPARE(source.elapsedSec(), 2);
         QCOMPARE(source.playbackRate(), 2.0);
+    }
+
+    void togglePauseSwitchesRunningAndPaused() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(
+            scenarioPath(QStringLiteral("match_3v3_basic.json"))));
+        QVERIFY(source.start());
+        QVERIFY(source.togglePause());
+        QVERIFY(source.isPaused());
+        QVERIFY(!source.isRunning());
+        QVERIFY(source.togglePause());
+        QVERIFY(source.isRunning());
+        QVERIFY(!source.isPaused());
+    }
+
+    void cycleScenarioMovesForwardAndBackward() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(
+            scenarioPath(QStringLiteral("match_3v3_basic.json"))));
+        QVERIFY(source.cycleScenario(1));
+        QCOMPARE(source.scenarioId(), QStringLiteral("match_3v3_damage"));
+        QVERIFY(source.isRunning());
+
+        QVERIFY(source.cycleScenario(-1));
+        QCOMPARE(source.scenarioId(), QStringLiteral("match_3v3_basic"));
+        QVERIFY(source.isRunning());
     }
 
     void resetRestoresInitialAndZeroClock() {

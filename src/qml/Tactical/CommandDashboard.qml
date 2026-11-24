@@ -66,6 +66,31 @@ Item {
         compact: root.compact
     }
 
+    Rectangle {
+        id: settlementBanner
+        objectName: "mockSettlementBanner"
+        visible: Boolean(root.pageRoot.uiFirstMode)
+            && root.pageRoot.matchSnapshot?.phase === "settlement"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: header.bottom
+        anchors.topMargin: 8
+        width: Math.min(520, parent.width * 0.34)
+        height: 48
+        radius: 3
+        color: "#e5182a34"
+        border.width: 1
+        border.color: root.side === 2 ? root.blueAccent : root.redAccent
+        z: 40
+
+        Text {
+            anchors.centerIn: parent
+            text: "比赛结算   " + root.pageRoot.allyScore + " : " + root.pageRoot.enemyScore
+            color: "#f2f6f8"
+            font.pixelSize: 20
+            font.bold: true
+        }
+    }
+
     RowLayout {
         id: battlefield
         visible: !root.summary
@@ -427,6 +452,13 @@ Item {
             }
             KeyTip { keyText: "Ctrl+Y"; label: "地图 / 工业相机" }
             KeyTip { keyText: "Ctrl+T"; label: "切换操作界面" }
+            KeyTip {
+                visible: root.pageRoot.uiFirstMode
+                keyText: "F5"
+                label: root.pageRoot.mockPaused ? "继续模拟" : "暂停模拟"
+            }
+            KeyTip { visible: root.pageRoot.uiFirstMode; keyText: "F6"; label: "重置模拟" }
+            KeyTip { visible: root.pageRoot.uiFirstMode; keyText: "F7"; label: "切换场景" }
             Item { Layout.fillWidth: true }
             Text {
                 text: root.dashboard.mockMode

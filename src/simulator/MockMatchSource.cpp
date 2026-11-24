@@ -2,6 +2,7 @@
 
 #include <QDateTime>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -1087,7 +1088,7 @@ bool MockMatchSource::isLoaded() const {
 }
 
 bool MockMatchSource::isRunning() const {
-    return d->running;
+    return d->running && !d->paused;
 }
 
 bool MockMatchSource::isPaused() const {
@@ -1202,6 +1203,47 @@ bool MockMatchSource::reset() {
 
 bool MockMatchSource::restart() {
     return reset() && start();
+}
+
+bool MockMatchSource::togglePause() {
+    if (!d->loaded || d->completed) {
+        return false;
+    }
+    if (d->paused) {
+        return resume();
+    }
+    if (d->running) {
+        return pause();
+    }
+    return start();
+}
+
+bool MockMatchSource::cycleScenario(int direction) {
+    static const QStringList scenarios{
+        QStringLiteral("match_3v3_basic.json"),
+        QStringLiteral("match_3v3_damage.json"),
+        QStringLiteral("match_3v3_offline.json"),
+        QStringLiteral("match_3v3_settlement.json"),
+    };
+
+    int currentIndex = -1;
+    for (int index = 0; index < scenarios.size(); ++index) {
+        if (d->id ==
+            QFileInfo(scenarios.at(index)).completeBaseName()) {
+            currentIndex = index;
+            break;
+        }
+    }
+    if (currentIndex < 0) {
+        currentIndex = 0;
+    } else {
+        const int step = direction < 0 ? -1 : 1;
+        currentIndex =
+            (currentIndex + step + scenarios.size()) % scenarios.size();
+    }
+    const QString path =
+        QStringLiteral(":/mock/3v3/") + scenarios.at(currentIndex);
+    return loadFromFile(path) && start();
 }
 
 void MockMatchSource::setPlaybackRate(double rate) {

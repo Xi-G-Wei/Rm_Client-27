@@ -6835,6 +6835,13 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
 
   if (event->type() == QEvent::ShortcutOverride) {
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+    if (m_mockMatchSource && !keyEvent->isAutoRepeat() &&
+        (keyEvent->key() == Qt::Key_F5 ||
+         keyEvent->key() == Qt::Key_F6 ||
+         keyEvent->key() == Qt::Key_F7)) {
+      event->accept();
+      return true;
+    }
     if (shouldCaptureSettingsPanelShortcut(keyEvent)) {
       event->accept();
       return true;
@@ -6898,6 +6905,26 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     }
   } else if (event->type() == QEvent::KeyPress) {
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+    if (m_mockMatchSource && !keyEvent->isAutoRepeat()) {
+      if (keyEvent->key() == Qt::Key_F5) {
+        m_mockMatchSource->togglePause();
+        event->accept();
+        return true;
+      }
+      if (keyEvent->key() == Qt::Key_F6) {
+        m_mockMatchSource->reset();
+        m_mockMatchSource->start();
+        event->accept();
+        return true;
+      }
+      if (keyEvent->key() == Qt::Key_F7) {
+        const int direction =
+            (keyEvent->modifiers() & Qt::ShiftModifier) ? -1 : 1;
+        m_mockMatchSource->cycleScenario(direction);
+        event->accept();
+        return true;
+      }
+    }
     if (keyEvent->key() == Qt::Key_Escape && m_gameResultWidget &&
         m_gameResultWidget->isVisible() && isInputEventFromClientWindow(obj)) {
       m_gameResultWidget->dismissResult();

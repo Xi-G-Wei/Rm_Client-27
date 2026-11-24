@@ -497,6 +497,10 @@ private slots:
     QVERIFY(source.advanceByMs(40000));
     QTRY_COMPARE(clock->property("text").toString(), QStringLiteral("00:00"));
     QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("2"));
+    QObject *settlementBanner =
+        page->findChild<QObject *>(QStringLiteral("mockSettlementBanner"));
+    QVERIFY(settlementBanner);
+    QTRY_VERIFY(settlementBanner->property("visible").toBool());
   }
 
   void testBattlefieldReportTouchesRenderedMapEdge() {

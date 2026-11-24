@@ -18,9 +18,11 @@ Rectangle {
     readonly property var tacticalAnalyzerContext: typeof tacticalAnalyzer !== "undefined" ? tacticalAnalyzer : null
     readonly property var gameDataContext: typeof gameData !== "undefined" ? gameData : null
     readonly property var matchUiContext: typeof mockUiSource !== "undefined" ? mockUiSource : null
+    readonly property var mockSourceContext: typeof mockMatchSource !== "undefined" ? mockMatchSource : null
     readonly property var mainWindowContext: typeof mainWindow !== "undefined" ? mainWindow : null
     // qmllint enable unqualified
     readonly property bool uiFirstMode: Boolean(root.matchUiContext?.active)
+    readonly property bool mockPaused: Boolean(root.mockSourceContext?.paused)
     readonly property var tacticalGameContext: root.uiFirstMode
         ? root.matchUiContext : root.gameDataContext
     readonly property var matchSnapshot: root.uiFirstMode

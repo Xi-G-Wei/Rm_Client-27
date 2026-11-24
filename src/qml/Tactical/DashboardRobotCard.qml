@@ -28,6 +28,11 @@ Rectangle {
     readonly property real superCapPercent: Number(robot.energy?.superCapPercent ?? -1)
     readonly property real chassisPowerW: Number(robot.energy?.chassisPowerW ?? -1)
     readonly property real chassisPowerLimitW: Number(robot.energy?.chassisPowerLimitW ?? -1)
+    readonly property bool offline: robot.online === false
+    readonly property bool dead: !root.reviving && Number(robot.hp ?? -1) === 0
+    readonly property bool overpowered: chassisPowerW >= 0
+        && chassisPowerLimitW > 0 && chassisPowerW > chassisPowerLimitW
+    readonly property bool lowSuperCap: superCapPercent >= 0 && superCapPercent < 20
     readonly property string driveTypeLabel: robot.chassis?.driveTypeLabel || ""
     readonly property string chassisModeLabel: robot.chassis?.modeLabel || ""
     readonly property string wheelLegModeLabel: robot.wheelLeg?.telemetryAvailable
@@ -39,9 +44,14 @@ Rectangle {
 
     radius: 2
     clip: true
-    color: root.invincible ? "#3e3020" : Qt.tint("#19262f", Qt.alpha(root.sideSurface, 0.18))
-    border.width: 1
-    border.color: Qt.tint("#506674", Qt.alpha(root.fillColor, root.robot.selected ? 0.72 : 0.37))
+    color: root.offline ? "#32292d"
+        : root.invincible ? "#3e3020"
+        : Qt.tint("#19262f", Qt.alpha(root.sideSurface, 0.18))
+    border.width: root.overpowered || root.lowSuperCap || root.offline ? 2 : 1
+    border.color: root.offline ? "#8a9399"
+        : root.overpowered ? "#ff786c"
+        : root.lowSuperCap ? "#ffc267"
+        : Qt.tint("#506674", Qt.alpha(root.fillColor, root.robot.selected ? 0.72 : 0.37))
 
     Canvas {
         id: pattern
@@ -211,16 +221,22 @@ Rectangle {
             }
             Text {
                 Layout.fillWidth: true
-                text: root.posture !== "" ? "○ " + root.posture
-                    + (root.robot.sentry.powered ? "  强化" : root.robot.sentry.weakened ? "  弱化" : "")
-                    + (root.robot.sentry.cooldown > 0 ? "  ≈" + root.robot.sentry.cooldown + "s" : "")
-                    : root.aerial ? "— 单机状态未上报"
-                    : root.invincible ? "护盾保护"
-                    : root.reviving ? "复活读条"
-                    : root.robot.hp === 0 ? "◇ 战亡"
-                    : root.showsHeavyForm ? "◇ " + (root.heavyMotion?.transforming ? "变形中" : Format.heavyStatus(root.robot.heavy))
-                    : root.robot.hp !== undefined ? "○ 在场" : "— 待上报"
-                color: root.robot.hp === 0 && !root.reviving ? "#ffb09e"
+                text: root.offline ? "× 数据中断"
+                    : root.dead ? "◇ 战亡"
+                    : root.overpowered ? "⚡ 超功率"
+                    : root.lowSuperCap ? "⚡ 超电低"
+                    : root.posture !== "" ? "○ " + root.posture
+                        + (root.robot.sentry.powered ? "  强化" : root.robot.sentry.weakened ? "  弱化" : "")
+                        + (root.robot.sentry.cooldown > 0 ? "  ≈" + root.robot.sentry.cooldown + "s" : "")
+                        : root.aerial ? "— 单机状态未上报"
+                        : root.invincible ? "护盾保护"
+                        : root.reviving ? "复活读条"
+                        : root.showsHeavyForm ? "◇ " + (root.heavyMotion?.transforming ? "变形中" : Format.heavyStatus(root.robot.heavy))
+                        : root.robot.hp !== undefined ? "○ 在场" : "— 待上报"
+                color: root.offline ? "#aab3b8"
+                    : root.overpowered ? "#ff8b80"
+                    : root.lowSuperCap ? "#ffd08d"
+                    : root.robot.hp === 0 && !root.reviving ? "#ffb09e"
                     : root.reviving || root.invincible ? root.fillColor
                     : root.heavyHero ? Format.heavyGold()
                     : root.robot.heavy?.allowed === true ? Format.heavyAccent(root.blue) : "#ccdae4"

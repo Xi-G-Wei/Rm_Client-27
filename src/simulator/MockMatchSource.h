@@ -54,6 +54,8 @@ public:
     bool reset();
     bool restart();
     void setPlaybackRate(double rate);
+    Q_INVOKABLE bool togglePause();
+    Q_INVOKABLE bool cycleScenario(int direction = 1);
 
     // 测试和回放接口：显式推进真实时间，不受系统定时器抖动影响。
     bool advanceByMs(qint64 elapsedMs);
