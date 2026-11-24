@@ -35,8 +35,8 @@ Item {
         anchors.leftMargin: header.margin
         anchors.rightMargin: Math.max(37, header.margin)
         anchors.topMargin: 3
-        height: root.compact ? 54 : 62
-        spacing: 8
+        height: root.compact ? 56 : 62
+        spacing: 10
         TeamRoster {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -81,10 +81,11 @@ Item {
                     const chassis = modelData.chassis?.modeLabel || ""
                     return [drive, wheel || chassis].filter(v => v).join(" · ")
                 }
+                readonly property int portraitWidth: root.compact ? 38 : 44
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: 1
-                radius: 2
+                radius: 3
                 border.width: modelData.selected ? 2 : 1
                 border.color: modelData.selected ? "#c8f7e1"
                     : !online ? "#596268"
@@ -96,14 +97,14 @@ Item {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 4
-                    anchors.rightMargin: 6
+                    anchors.leftMargin: 5
+                    anchors.rightMargin: 7
                     anchors.topMargin: 2
                     anchors.bottomMargin: 5
-                    spacing: 5
+                    spacing: 6
 
                     Item {
-                        Layout.preferredWidth: root.compact ? 34 : 39
+                        Layout.preferredWidth: seat.portraitWidth
                         Layout.fillHeight: true
                         Image {
                             anchors.fill: parent
@@ -115,8 +116,8 @@ Item {
                             opacity: seat.online ? 1.0 : 0.35
                         }
                         Rectangle {
-                            width: 17
-                            height: 15
+                            width: 19
+                            height: 17
                             radius: 2
                             color: "#172731"
                             border.color: Qt.alpha(wing.accent, 0.62)
@@ -124,7 +125,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: seat.modelData.number
                                 color: wing.accent
-                                font.pixelSize: 10
+                                font.pixelSize: root.compact ? 10 : 11
                                 font.bold: true
                             }
                         }
@@ -142,7 +143,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: seat.modelData.name || "机器人"
                                 color: "#edf6fa"
-                                font.pixelSize: root.compact ? 10 : 11
+                                font.pixelSize: root.compact ? 11 : 12
                                 font.bold: true
                                 elide: Text.ElideRight
                             }
@@ -150,7 +151,7 @@ Item {
                                 text: Format.number(seat.modelData.hp)
                                     + " / " + Format.number(seat.modelData.maxHp)
                                 color: "#f4f8fb"
-                                font.pixelSize: root.compact ? 10 : 11
+                                font.pixelSize: root.compact ? 11 : 12
                                 font.bold: true
                             }
                         }
@@ -170,7 +171,7 @@ Item {
                                     : seat.dead ? "战亡" : "在场"
                                 color: !seat.online ? "#9aa1a5"
                                     : seat.dead ? "#ff9b8e" : "#b8cbd7"
-                                font.pixelSize: 9
+                                font.pixelSize: root.compact ? 9 : 10
                             }
                             Text {
                                 Layout.fillWidth: true
@@ -183,7 +184,7 @@ Item {
                                             * 100) + "%"
                                         : "—")
                                 color: "#d4e2ea"
-                                font.pixelSize: 8
+                                font.pixelSize: root.compact ? 8 : 9
                                 elide: Text.ElideRight
                             }
                         }
@@ -199,7 +200,7 @@ Item {
                                 ? "#ff9b8e"
                                 : seat.superCap >= 0 && seat.superCap < 50
                                     ? "#f4cb87" : "#75d8bb"
-                            font.pixelSize: 8
+                            font.pixelSize: root.compact ? 8 : 9
                             elide: Text.ElideRight
                         }
                     }
