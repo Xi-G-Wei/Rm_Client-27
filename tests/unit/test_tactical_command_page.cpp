@@ -467,10 +467,18 @@ private slots:
     auto *advantageLabel = qobject_cast<QQuickItem *>(
         page->findChild<QObject *>(
             QStringLiteral("commandAdvantageLabel")));
+    auto *clockWell = qobject_cast<QQuickItem *>(
+        page->findChild<QObject *>(
+            QStringLiteral("dashboardClockWell")));
     QVERIFY(clock);
     QVERIFY(redScore);
     QVERIFY(clockItem);
     QVERIFY(advantageLabel);
+    QVERIFY(clockWell);
+    const QRectF clockTextInWell = clockItem->mapRectToItem(
+        clockWell, QRectF(0, 0, clockItem->width(), clockItem->height()));
+    QVERIFY(clockTextInWell.top() >= 0.0);
+    QVERIFY(clockTextInWell.bottom() <= clockWell->height() + 0.5);
     QVERIFY(!advantageLabel->isVisible());
 
     QVERIFY(source.start());

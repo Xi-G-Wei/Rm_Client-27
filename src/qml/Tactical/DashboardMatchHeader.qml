@@ -18,7 +18,7 @@ Rectangle {
     readonly property color blueAccent: "#85c6f2"
     readonly property int side: Number(dashboard.leadingSide || 0)
     readonly property int margin: Math.max(12, Math.min(26, Math.round(width * 0.0115)))
-    readonly property int clockHeight: compact ? 58 : 74
+    readonly property int clockHeight: compact ? 64 : 76
     readonly property int clockWidth: Math.max(220, Math.round((width - 2 * margin - 28) * 0.45 / 2.45))
     readonly property int advantageHeight: 16
     readonly property int contentHeight: clockHeight + 3 + advantageHeight
@@ -87,11 +87,11 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             spacing: 3
             Item {
+                objectName: "dashboardClockWell"
                 Layout.fillWidth: true
                 Layout.minimumHeight: root.clockHeight
                 Layout.preferredHeight: root.clockHeight
                 Layout.maximumHeight: root.clockHeight
-                clip: true
                 Canvas {
                     anchors.fill: parent
                     onWidthChanged: requestPaint()
@@ -124,50 +124,58 @@ Rectangle {
                         ctx.fillRect(width * .25, 1, width * .50, height - 2)
                     }
                 }
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 4
-                    Text {
-                        objectName: "dashboardRedScore"
-                        Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignHCenter
-                        text: root.redTeamScore
-                        color: root.redAccent
-                        font.family: "Bahnschrift"
-                        font.pixelSize: root.compact ? 33 : 42
-                        font.bold: true
-                    }
-                    Column {
-                        Layout.preferredWidth: root.clockWidth * 0.50
-                        Layout.alignment: Qt.AlignCenter
-                        Text {
-                            width: parent.width
-                            horizontalAlignment: Text.AlignHCenter
-                            text: (root.roundNumber > 0 ? "第 " + root.roundNumber + " 局 · " : "")
-                                  + root.phaseText
-                            color: "#bce1d3"
-                            font.pixelSize: 10
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            objectName: "dashboardMatchClock"
-                            text: root.clock
-                            color: "#fbfcff"
-                            font.family: "Bahnschrift"
-                            font.pixelSize: root.compact ? 33 : Math.min(52, Math.round(root.width * 0.028))
-                            font.weight: Font.ExtraBold
-                        }
-                    }
-                    Text {
-                        objectName: "dashboardBlueScore"
-                        Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignHCenter
-                        text: root.blueTeamScore
-                        color: root.blueAccent
-                        font.family: "Bahnschrift"
-                        font.pixelSize: root.compact ? 33 : 42
-                        font.bold: true
-                    }
+                Text {
+                    objectName: "dashboardRedScore"
+                    x: 4
+                    width: parent.width * 0.22
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: 4
+                    horizontalAlignment: Text.AlignHCenter
+                    text: root.redTeamScore
+                    color: root.redAccent
+                    font.family: "Bahnschrift"
+                    font.pixelSize: root.compact ? 30 : 36
+                    font.bold: true
+                }
+                Text {
+                    width: parent.width * 0.52
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 3
+                    horizontalAlignment: Text.AlignHCenter
+                    text: (root.roundNumber > 0 ? "第 " + root.roundNumber + " 局 · " : "")
+                          + root.phaseText
+                    color: "#bce1d3"
+                    font.pixelSize: 10
+                    elide: Text.ElideRight
+                }
+                Text {
+                    objectName: "dashboardMatchClock"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: 5
+                    horizontalAlignment: Text.AlignHCenter
+                    text: root.clock
+                    color: "#fbfcff"
+                    font.family: "Bahnschrift"
+                    font.pixelSize: root.compact ? 24
+                        : Math.max(32, Math.min(38, Math.round(root.width * 0.022)))
+                    font.weight: Font.ExtraBold
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Text {
+                    objectName: "dashboardBlueScore"
+                    anchors.right: parent.right
+                    anchors.rightMargin: 4
+                    width: parent.width * 0.22
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: 4
+                    horizontalAlignment: Text.AlignHCenter
+                    text: root.blueTeamScore
+                    color: root.blueAccent
+                    font.family: "Bahnschrift"
+                    font.pixelSize: root.compact ? 30 : 36
+                    font.bold: true
                 }
             }
             Rectangle {
