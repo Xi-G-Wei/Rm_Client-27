@@ -6020,7 +6020,9 @@ void MainWindow::applyPanelResolutionScaling() {
 
   if (m_leftBottomPanel) {
     const bool currentSeason = m_gameData && m_gameData->uses2027Protocol();
-    const QSize leftBottomSize = getScaledPanelSize(currentSeason ? 520 : 460, 200);
+    const QSize leftBottomSize =
+        getScaledPanelSize(currentSeason ? 480 : 460,
+                           currentSeason ? 184 : 200);
     m_leftBottomPanel->setFixedSize(leftBottomSize);
     setQmlRootScale(m_leftBottomPanel, scale);
   }

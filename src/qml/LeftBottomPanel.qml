@@ -12,8 +12,8 @@ import "Tactical" as Tactical
  */
 Item {
     id: root
-    width: commandStyle ? 520 : 460
-    height: 200
+    width: commandStyle ? 480 : 460
+    height: commandStyle ? 184 : 200
     //确保组件本身透明
     clip: false
 
