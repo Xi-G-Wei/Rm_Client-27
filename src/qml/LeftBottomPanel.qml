@@ -12,8 +12,8 @@ import "Tactical" as Tactical
  */
 Item {
     id: root
-    width: commandStyle ? 480 : 460
-    height: commandStyle ? 184 : 200
+    width: commandStyle ? 452 : 460
+    height: commandStyle ? 164 : 200
     //确保组件本身透明
     clip: false
 
@@ -255,10 +255,7 @@ Item {
     Loader {
         active: root.commandStyle
         anchors.fill: parent
-        anchors.leftMargin: 16
-        anchors.rightMargin: 12
-        anchors.topMargin: 8
-        anchors.bottomMargin: 12
+        anchors.margins: 0
         sourceComponent: Tactical.PilotRobotCard { game: root.activeGameData }
     }
 

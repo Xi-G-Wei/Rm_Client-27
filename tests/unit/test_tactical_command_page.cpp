@@ -674,8 +674,8 @@ private slots:
     QVERIFY2(panelObject, qPrintable(component.errorString()));
     auto *panel = qobject_cast<QQuickItem *>(panelObject.data());
     QVERIFY(panel);
-    panel->setWidth(520);
-    panel->setHeight(200);
+    panel->setWidth(452);
+    panel->setHeight(164);
 
     QTRY_VERIFY(panel->property("uiFirstMode").toBool());
     QVERIFY(panel->property("commandStyle").toBool());
@@ -684,8 +684,12 @@ private slots:
     QCOMPARE(panel->property("superCapEnergy").toReal(), 74.0);
     QCOMPARE(panel->property("chassisStatus").toString(),
              QStringLiteral("普通 · 55 W"));
-    QTRY_VERIFY(panel->findChild<QObject *>(
-                    QStringLiteral("pilotVehicleCard")) != nullptr);
+    QQuickItem *vehicleCard = nullptr;
+    QTRY_VERIFY((vehicleCard = panel->findChild<QQuickItem *>(
+                     QStringLiteral("pilotVehicleCard"))) != nullptr);
+    const QRectF vehicleCardRect = vehicleCard->mapRectToItem(
+        panel, QRectF(0, 0, vehicleCard->width(), vehicleCard->height()));
+    QCOMPARE(vehicleCardRect, QRectF(0, 0, panel->width(), panel->height()));
 
     QVERIFY(source.start());
     QVERIFY(source.advanceByMs(40000));

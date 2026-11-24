@@ -2929,7 +2929,7 @@ void MainWindow::createCenterArea() {
   // 上下文属性稍后设置
 
   // 设置左下角机器人面板的最小尺寸和外边距
-  m_leftBottomPanel->setMinimumSize(400, 200);
+  m_leftBottomPanel->setMinimumSize(400, 164);
   m_leftBottomPanel->setContentsMargins(0, 0, 0, 0);
 
   // 设置 row 2 的最小高度以确保面板可见
@@ -3029,8 +3029,8 @@ void MainWindow::createCenterArea() {
       m_exchangeHintBox->graphicsEffect()->setEnabled(true);
   }
 
-  // 添加一些底部边距
-  centerLayout->setContentsMargins(0, 0, 0, 20); // 全局底部边距
+  // 操作页控件贴住窗口边缘，左下车辆卡不再保留底部空隙。
+  centerLayout->setContentsMargins(0, 0, 0, 0);
 
   // 底部“H”按键图标标签
   m_hKeyHint = new QLabel("H", m_centralWidget);
@@ -6021,8 +6021,8 @@ void MainWindow::applyPanelResolutionScaling() {
   if (m_leftBottomPanel) {
     const bool currentSeason = m_gameData && m_gameData->uses2027Protocol();
     const QSize leftBottomSize =
-        getScaledPanelSize(currentSeason ? 480 : 460,
-                           currentSeason ? 184 : 200);
+        getScaledPanelSize(currentSeason ? 452 : 460,
+                           currentSeason ? 164 : 200);
     m_leftBottomPanel->setFixedSize(leftBottomSize);
     setQmlRootScale(m_leftBottomPanel, scale);
   }
