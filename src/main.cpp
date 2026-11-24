@@ -235,6 +235,7 @@ int main(int argc, char *argv[]) {
   // 初始化QML资源（从静态库链接时需要）
   Q_INIT_RESOURCE(qml);
   Q_INIT_RESOURCE(resources);
+  Q_INIT_RESOURCE(mock);
 
   // 在创建 QApplication 之前设置 Qt Quick Controls 2 风格（修复QML Controls不支持的报错）
   QQuickStyle::setStyle("Fusion");

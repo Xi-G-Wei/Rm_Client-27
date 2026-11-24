@@ -1,0 +1,89 @@
+#pragma once
+
+#include <QObject>
+#include <QVariantList>
+#include <QVariantMap>
+
+namespace RM {
+
+class MatchSession;
+
+// 将协议无关的 MatchSnapshot 投影成现有战术页面需要的字段。
+// 后续真实协议接入时也应通过同一投影，而不是让 QML 解释原始报文。
+class MatchUiProjection : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(bool active READ active NOTIFY updated)
+    Q_PROPERTY(bool mockMode READ mockMode CONSTANT)
+    Q_PROPERTY(QVariantMap snapshot READ snapshot NOTIFY updated)
+    Q_PROPERTY(QVariantMap dashboardData READ dashboardData NOTIFY updated)
+    Q_PROPERTY(QVariantMap headerData READ headerData NOTIFY updated)
+    Q_PROPERTY(QVariantMap resourceData READ resourceData NOTIFY updated)
+    Q_PROPERTY(QVariantMap topStatusData READ topStatusData NOTIFY updated)
+    Q_PROPERTY(QVariantList keyEvents READ keyEvents NOTIFY updated)
+    Q_PROPERTY(QVariantList allyRobotList READ allyRobotList NOTIFY updated)
+    Q_PROPERTY(QVariantList enemyRobotList READ enemyRobotList NOTIFY updated)
+    Q_PROPERTY(QVariantMap mapData READ mapData NOTIFY updated)
+    Q_PROPERTY(QVariantMap cameraPreviewData READ cameraPreviewData NOTIFY updated)
+    Q_PROPERTY(QVariantMap linkHealth READ linkHealth NOTIFY updated)
+    Q_PROPERTY(QVariantList analysisMetrics READ analysisMetrics NOTIFY updated)
+    Q_PROPERTY(QVariantMap mainDecision READ mainDecision NOTIFY updated)
+    Q_PROPERTY(QVariantMap predictionData READ predictionData NOTIFY updated)
+    Q_PROPERTY(QString layoutMode READ layoutMode NOTIFY updated)
+
+    // DashboardMatchHeader 使用的 GameData 兼容字段。
+    Q_PROPERTY(bool hasBases READ hasBases CONSTANT)
+    Q_PROPERTY(bool hasControlPoints READ hasControlPoints CONSTANT)
+    Q_PROPERTY(double fieldWidth READ fieldWidth CONSTANT)
+    Q_PROPERTY(double fieldHeight READ fieldHeight CONSTANT)
+    Q_PROPERTY(int remainingTime READ remainingTime NOTIFY updated)
+    Q_PROPERTY(int redScore READ redScore NOTIFY updated)
+    Q_PROPERTY(int blueScore READ blueScore NOTIFY updated)
+    Q_PROPERTY(int currentRound READ currentRound NOTIFY updated)
+    Q_PROPERTY(QString gamePhase READ gamePhase NOTIFY updated)
+    Q_PROPERTY(QVariantMap territoryStatus READ territoryStatus NOTIFY updated)
+    Q_PROPERTY(QString redTeamName READ redTeamName NOTIFY updated)
+    Q_PROPERTY(QString blueTeamName READ blueTeamName NOTIFY updated)
+
+public:
+    explicit MatchUiProjection(MatchSession *session,
+                               QObject *parent = nullptr);
+
+    bool active() const;
+    bool mockMode() const;
+    QVariantMap snapshot() const;
+    QVariantMap dashboardData() const;
+    QVariantMap headerData() const;
+    QVariantMap resourceData() const;
+    QVariantMap topStatusData() const;
+    QVariantList keyEvents() const;
+    QVariantList allyRobotList() const;
+    QVariantList enemyRobotList() const;
+    QVariantMap mapData() const;
+    QVariantMap cameraPreviewData() const;
+    QVariantMap linkHealth() const;
+    QVariantList analysisMetrics() const;
+    QVariantMap mainDecision() const;
+    QVariantMap predictionData() const;
+    QString layoutMode() const;
+
+    bool hasBases() const;
+    bool hasControlPoints() const;
+    double fieldWidth() const;
+    double fieldHeight() const;
+    int remainingTime() const;
+    int redScore() const;
+    int blueScore() const;
+    int currentRound() const;
+    QString gamePhase() const;
+    QVariantMap territoryStatus() const;
+    QString redTeamName() const;
+    QString blueTeamName() const;
+
+signals:
+    void updated();
+
+private:
+    MatchSession *m_session = nullptr;
+};
+
+} // namespace RM

@@ -17,8 +17,14 @@ Rectangle {
     // qmllint disable unqualified
     readonly property var tacticalAnalyzerContext: typeof tacticalAnalyzer !== "undefined" ? tacticalAnalyzer : null
     readonly property var gameDataContext: typeof gameData !== "undefined" ? gameData : null
+    readonly property var matchUiContext: typeof mockUiSource !== "undefined" ? mockUiSource : null
     readonly property var mainWindowContext: typeof mainWindow !== "undefined" ? mainWindow : null
     // qmllint enable unqualified
+    readonly property bool uiFirstMode: Boolean(root.matchUiContext?.active)
+    readonly property var tacticalGameContext: root.uiFirstMode
+        ? root.matchUiContext : root.gameDataContext
+    readonly property var matchSnapshot: root.uiFirstMode
+        ? (root.matchUiContext.snapshot || ({})) : ({})
 
     readonly property int designWidth: 1672
     readonly property int designHeight: 850
@@ -32,13 +38,14 @@ Rectangle {
         )
     )
     readonly property int centerPanelY: 0
-    readonly property var dataSource: root.tacticalAnalyzerContext
-        ? root.tacticalAnalyzerContext : mockData
+    readonly property var dataSource: root.uiFirstMode
+        ? root.matchUiContext
+        : (root.tacticalAnalyzerContext ? root.tacticalAnalyzerContext : mockData)
     readonly property var header: root.dataSource.headerData || mockData.headerData
     readonly property var resources: root.dataSource.resourceData || mockData.resourceData
     readonly property var topStatus: root.dataSource.topStatusData || mockData.topStatusData
     readonly property var linkHealth: root.dataSource.linkHealth || mockData.linkHealth
-    readonly property bool allyIsRed: root.gameDataContext ? (
+    readonly property bool allyIsRed: root.uiFirstMode ? true : root.gameDataContext ? (
         root.gameDataContext.myRobot && root.gameDataContext.myRobot.isRedTeam !== undefined
             ? Boolean(root.gameDataContext.myRobot.isRedTeam)
             : Number(root.gameDataContext.currentRobotId || 1) < 100
@@ -46,14 +53,18 @@ Rectangle {
     readonly property bool allyIsBlue: !root.allyIsRed
     readonly property bool enemyIsBlue: root.allyIsRed
     readonly property bool tacticalMapViewMirrored: root.allyIsBlue
-    readonly property string tacticalMapBackgroundSource: root.gameDataContext
+    readonly property string tacticalMapBackgroundSource: root.uiFirstMode
+        ? "qrc:/images/rmul3v3.png"
+        : root.gameDataContext
         && root.gameDataContext.uses2027Protocol ? root.gameDataContext.mapBackground
         : (root.allyIsBlue ? "qrc:/images/minimap_bg_blue_left.png"
                           : "qrc:/images/minimap_bg_red_left.png")
-    readonly property string redTeamName: root.gameDataContext
-        ? (root.gameDataContext.redTeamName || "红方") : "红方"
-    readonly property string blueTeamName: root.gameDataContext
-        ? (root.gameDataContext.blueTeamName || "蓝方") : "蓝方"
+    readonly property string redTeamName: root.uiFirstMode
+        ? String(root.matchSnapshot.redTeam?.name || "红方")
+        : root.gameDataContext ? (root.gameDataContext.redTeamName || "红方") : "红方"
+    readonly property string blueTeamName: root.uiFirstMode
+        ? String(root.matchSnapshot.blueTeam?.name || "蓝方")
+        : root.gameDataContext ? (root.gameDataContext.blueTeamName || "蓝方") : "蓝方"
     readonly property string allyTeamName: root.allyIsRed ? root.redTeamName : root.blueTeamName
     readonly property string enemyTeamName: root.allyIsRed ? root.blueTeamName : root.redTeamName
     readonly property int allyScore: root.allyIsRed
@@ -87,6 +98,7 @@ Rectangle {
     property bool heroCameraFpsInitialized: false
     readonly property bool liveCameraSourceAllowed: root.cameraRefreshEnabled
         && !root.largeMapMode
+        && !root.uiFirstMode
         && !(root.tacticalAnalyzerContext
              ? Boolean(root.tacticalAnalyzerContext.useMockData) : false)
     readonly property bool hasHeroCameraFrame: root.liveCameraSourceAllowed
@@ -140,7 +152,8 @@ Rectangle {
         root.selectedEnemyId = ""
     }
     readonly property bool videoPrimary: root.layoutMode === "video_primary"
-    readonly property bool commandDashboardActive: Boolean(root.gameDataContext?.uses2027Protocol)
+    readonly property bool commandDashboardActive: (root.uiFirstMode
+        || Boolean(root.gameDataContext?.uses2027Protocol))
         && (root.commandSummaryMode || !root.largeMapMode)
     property bool commandSummaryMode: false
     // 参考画布按 1920x1080 设计。横纵缩放分别计算，避免超宽屏或高分屏拉伸 HUD。
@@ -271,8 +284,8 @@ Rectangle {
             liveFrameSource: root.heroCameraFrameSource
             liveFps: root.hasHeroCameraFrame ? root.heroCameraFps : -1
             status: root.dataSource.cameraPreviewData || mockData.cameraPreviewData
-            gameActive: root.gameDataContext
-                && root.gameDataContext.gamePhase !== "未开始"
+            gameActive: root.tacticalGameContext
+                && root.tacticalGameContext.gamePhase !== "未开始"
         }
 
         BattleEventPanel {
@@ -304,8 +317,8 @@ Rectangle {
             liveFrameSource: root.heroCameraFrameSource
             liveFps: root.hasHeroCameraFrame ? root.heroCameraFps : -1
             status: root.dataSource.cameraPreviewData || mockData.cameraPreviewData
-            gameActive: root.gameDataContext
-                && root.gameDataContext.gamePhase !== "未开始"
+            gameActive: root.tacticalGameContext
+                && root.tacticalGameContext.gamePhase !== "未开始"
         }
 
         TacticalRadarMap {

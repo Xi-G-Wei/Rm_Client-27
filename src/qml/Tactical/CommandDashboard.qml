@@ -10,7 +10,7 @@ Item {
 
     required property var pageRoot
     readonly property var dashboard: pageRoot.dataSource.dashboardData || ({})
-    readonly property var game: pageRoot.gameDataContext
+    readonly property var game: pageRoot.tacticalGameContext
     readonly property bool bases: Boolean(game?.hasBases)
     readonly property bool summary: pageRoot.commandSummaryMode
     readonly property bool cameraPriority: pageRoot.videoPrimary
@@ -60,6 +60,7 @@ Item {
         anchors.top: parent.top
         game: root.game
         dashboard: root.dashboard
+        snapshot: root.pageRoot.matchSnapshot
         redTeamName: root.pageRoot.redTeamName
         blueTeamName: root.pageRoot.blueTeamName
         compact: root.compact
@@ -423,7 +424,8 @@ Item {
             KeyTip { keyText: "Ctrl+T"; label: "切换操作界面" }
             Item { Layout.fillWidth: true }
             Text {
-                text: root.dashboard.statusFresh ? "裁判数据更新中" : "等待裁判数据"
+                text: root.dashboard.mockMode ? "本地模拟运行中"
+                    : root.dashboard.statusFresh ? "裁判数据更新中" : "等待裁判数据"
                 color: root.dashboard.statusFresh ? "#a6dfc8" : "#e3bc83"
                 font.pixelSize: 10
             }

@@ -8,6 +8,7 @@ Rectangle {
 
     required property var game
     required property var dashboard
+    property var snapshot: ({})
     required property string redTeamName
     required property string blueTeamName
     property bool compact: false
@@ -19,9 +20,25 @@ Rectangle {
     readonly property int clockHeight: compact ? 51 : 66
     readonly property int clockWidth: Math.max(220, Math.round((width - 2 * margin - 28) * 0.45 / 2.45))
     implicitHeight: bases ? (compact ? 84 : 106) : (compact ? 71 : 90)
+    readonly property bool hasSnapshot: snapshot && snapshot.timeRemainingSec !== undefined
+    readonly property int remainingSeconds: hasSnapshot
+        ? Number(snapshot.timeRemainingSec || 0)
+        : Number(game?.remainingTime || 0)
+    readonly property int redTeamScore: hasSnapshot
+        ? Number(snapshot.redTeam?.score || 0)
+        : Number(game?.redScore || 0)
+    readonly property int blueTeamScore: hasSnapshot
+        ? Number(snapshot.blueTeam?.score || 0)
+        : Number(game?.blueScore || 0)
+    readonly property int roundNumber: hasSnapshot
+        ? Number(snapshot.round || 1)
+        : Number(game?.currentRound || 0)
+    readonly property string phaseText: hasSnapshot
+        ? String(snapshot.phaseLabel || game?.gamePhase || "等待开赛")
+        : String(game?.gamePhase || "等待开赛")
 
     readonly property string clock: {
-        const t = Math.max(0, Number(game?.remainingTime || 0))
+        const t = Math.max(0, root.remainingSeconds)
         return Math.floor(t / 60).toString().padStart(2, "0") + ":" + (t % 60).toString().padStart(2, "0")
     }
 
@@ -105,7 +122,7 @@ Rectangle {
                         objectName: "dashboardRedScore"
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
-                        text: root.game?.redScore ?? "—"
+                        text: root.redTeamScore
                         color: root.redAccent
                         font.family: "Bahnschrift"
                         font.pixelSize: root.compact ? 33 : 42
@@ -117,8 +134,8 @@ Rectangle {
                         Text {
                             width: parent.width
                             horizontalAlignment: Text.AlignHCenter
-                            text: (root.game?.currentRound > 0 ? "第 " + root.game.currentRound + " 局 · " : "")
-                                  + (root.game?.gamePhase === "战斗阶段" ? "比赛中" : root.game?.gamePhase || "等待开赛")
+                            text: (root.roundNumber > 0 ? "第 " + root.roundNumber + " 局 · " : "")
+                                  + root.phaseText
                             color: "#bce1d3"
                             font.pixelSize: 10
                         }
@@ -136,7 +153,7 @@ Rectangle {
                         objectName: "dashboardBlueScore"
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
-                        text: root.game?.blueScore ?? "—"
+                        text: root.blueTeamScore
                         color: root.blueAccent
                         font.family: "Bahnschrift"
                         font.pixelSize: root.compact ? 33 : 42

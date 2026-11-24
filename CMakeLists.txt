@@ -290,10 +290,12 @@ endforeach()
 set(SOURCES
     resources.qrc
     src/qml/qml.qrc
+    mock/mock.qrc
     src/ui/ExchangeCommandPolicy.cpp
     src/ui/InputHotkeyPolicy.cpp
     src/ui/PopupOverlayPolicy.cpp
     src/ui/MainWindow.cpp
+    src/ui/MatchUiProjection.cpp
     src/widgets/HealthBarWidget.cpp
     src/widgets/RobotStatusPanel.cpp
     src/widgets/CrosshairWidget.cpp
@@ -354,6 +356,7 @@ set(HEADERS
     src/ui/MainWindowStatePolicy.h
     src/ui/PopupOverlayPolicy.h
     src/ui/MainWindow.h
+    src/ui/MatchUiProjection.h
     src/widgets/HealthBarWidget.h
     src/widgets/RobotStatusPanel.h
     src/widgets/CrosshairWidget.h

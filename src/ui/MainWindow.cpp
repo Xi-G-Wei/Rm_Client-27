@@ -55,6 +55,8 @@
 #include "../core/ExecutionFusion.h"
 #include "../core/MapCoordinateMapper.h"
 #include "../core/ThreatRanker.h"
+#include "../simulator/MockMatchSource.h"
+#include "MatchUiProjection.h"
 #include "../devhooks/ClientDevHooks.h"
 #include "../network/MqttClient.h"
 #include "../simulator/ProtocolSimulator.h"
@@ -2441,6 +2443,45 @@ void MainWindow::createCenterArea() {
             });
     m_tacticalAnalyzer->start(100);
   }
+
+  if (qEnvironmentVariableIsSet("RM_UI_FIRST_MOCK") &&
+      !m_mockMatchSource) {
+    m_mockMatchSource = new RM::MockMatchSource(this);
+    connect(m_mockMatchSource,
+            &RM::MockMatchSource::errorOccurred,
+            this,
+            [](const QString &message) {
+              qWarning() << "UI-first mock:" << message;
+            });
+    connect(m_mockMatchSource,
+            &RM::MockMatchSource::scenarioCompleted,
+            this,
+            []() { qInfo() << "UI-first mock scenario completed"; });
+
+    QString scenarioPath = qEnvironmentVariable("RM_UI_FIRST_SCENARIO");
+    if (scenarioPath.trimmed().isEmpty()) {
+      scenarioPath =
+          QStringLiteral(":/mock/3v3/match_3v3_basic.json");
+    } else if (scenarioPath.startsWith(QStringLiteral("qrc:"))) {
+      scenarioPath = QLatin1Char(':') + scenarioPath.mid(4);
+    } else if (!scenarioPath.startsWith(QLatin1Char(':')) &&
+               !scenarioPath.startsWith(QLatin1Char('/'))) {
+      if (!scenarioPath.endsWith(QStringLiteral(".json")))
+        scenarioPath += QStringLiteral(".json");
+      scenarioPath =
+          QStringLiteral(":/mock/3v3/") + scenarioPath;
+    }
+
+    if (m_mockMatchSource->loadFromFile(scenarioPath)) {
+      m_matchUiProjection =
+          new RM::MatchUiProjection(
+              m_mockMatchSource->matchSession(), this);
+      m_mockMatchSource->start();
+      qInfo() << "UI-first mock loaded:" << scenarioPath;
+    } else {
+      qWarning() << "UI-first mock load failed:" << scenarioPath;
+    }
+  }
   if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {
     m_qmlTopInfoBar->rootObject()->setProperty(
         "tacticalSource", QVariant::fromValue(m_tacticalAnalyzer));
@@ -2460,6 +2501,12 @@ void MainWindow::createCenterArea() {
   if (m_tacticalAnalyzer && m_qmlTacticalPage->rootContext()) {
     m_qmlTacticalPage->rootContext()->setContextProperty("tacticalAnalyzer",
                                                          m_tacticalAnalyzer);
+  }
+  if (m_qmlTacticalPage->rootContext()) {
+    m_qmlTacticalPage->rootContext()->setContextProperty(
+        "mockMatchSource", m_mockMatchSource);
+    m_qmlTacticalPage->rootContext()->setContextProperty(
+        "mockUiSource", m_matchUiProjection);
   }
   if (m_qmlTacticalPage->rootContext()) {
     m_qmlTacticalPage->rootContext()->setContextProperty("mainWindow", this);

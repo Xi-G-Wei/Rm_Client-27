@@ -25,6 +25,13 @@ Rectangle {
     readonly property real progress: invincible ? Format.ratio(robot.invincibleLeft, robot.invincibleTotal)
         : reviving ? Format.ratio(robot.respawnLeft, robot.respawnTotal) : Format.ratio(robot.hp, robot.maxHp)
     readonly property string posture: ["", "攻", "守", "移"][robot.sentry?.mode || 0] || ""
+    readonly property real superCapPercent: Number(robot.energy?.superCapPercent ?? -1)
+    readonly property real chassisPowerW: Number(robot.energy?.chassisPowerW ?? -1)
+    readonly property real chassisPowerLimitW: Number(robot.energy?.chassisPowerLimitW ?? -1)
+    readonly property string driveTypeLabel: robot.chassis?.driveTypeLabel || ""
+    readonly property string chassisModeLabel: robot.chassis?.modeLabel || ""
+    readonly property string wheelLegModeLabel: robot.wheelLeg?.telemetryAvailable
+        ? String(robot.wheelLeg?.modeLabel || "") : ""
     readonly property int fontSize: height < 65 ? 12 : 14
     readonly property var currentEffects: robot.effects || []
     readonly property int visibleEffects: Math.min(currentEffects.length,
@@ -251,6 +258,45 @@ Rectangle {
                 value: visible ? Math.round(root.robot.heat / root.robot.maxHeat * 100) + "%" : ""
                 fraction: Format.ratio(root.robot.heat, root.robot.maxHeat)
                 accent: root.robot.heatPenalty ? "#ff997f" : "#ffd08d"
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            visible: root.superCapPercent >= 0
+                || root.chassisPowerW >= 0
+                || root.driveTypeLabel.length > 0
+            spacing: 6
+            Text {
+                visible: root.superCapPercent >= 0
+                text: "超电 " + Math.round(root.superCapPercent) + "%"
+                color: root.superCapPercent < 20 ? "#ff9b8e"
+                    : root.superCapPercent < 50 ? "#f4cb87" : "#8fe2ae"
+                font.pixelSize: Math.max(9, root.fontSize - 3)
+                font.bold: true
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: root.chassisPowerW >= 0
+                text: "功率 " + Math.round(root.chassisPowerW) + " W"
+                    + (root.chassisPowerLimitW >= 0
+                        ? " / " + Math.round(root.chassisPowerLimitW) : "")
+                color: root.chassisPowerLimitW >= 0
+                    && root.chassisPowerW > root.chassisPowerLimitW
+                    ? "#ff9b8e" : "#b8cbd7"
+                font.pixelSize: Math.max(9, root.fontSize - 3)
+                elide: Text.ElideRight
+            }
+            Text {
+                visible: (root.driveTypeLabel + root.wheelLegModeLabel).length > 0
+                text: root.driveTypeLabel
+                    + (root.wheelLegModeLabel.length > 0
+                        ? " · " + root.wheelLegModeLabel
+                        : root.chassisModeLabel.length > 0
+                            ? " · " + root.chassisModeLabel : "")
+                color: "#a9c6d8"
+                font.pixelSize: Math.max(9, root.fontSize - 3)
+                elide: Text.ElideRight
             }
         }
     }

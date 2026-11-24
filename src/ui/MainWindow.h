@@ -53,6 +53,8 @@ class DataFreshnessGuard;
 class MapCoordinateMapper;
 class ThreatRanker;
 class ExecutionFusion;
+class MockMatchSource;
+class MatchUiProjection;
 }
 #include "../widgets/VideoBackgroundWidget.h"
 #include "../widgets/GameResultWidget.h"
@@ -535,6 +537,8 @@ private:
   GameData *m_gameData = nullptr;             // 比赛数据模型单例
   NetworkManager *m_networkManager = nullptr; // 网络通信管理器
   RM::TacticalAnalyzer *m_tacticalAnalyzer = nullptr; // 战术分析引擎
+  RM::MockMatchSource *m_mockMatchSource = nullptr; // UI-first 本地比赛源
+  RM::MatchUiProjection *m_matchUiProjection = nullptr; // 本地快照的界面投影
   MqttClient *m_mqttClient = nullptr;          // MQTT 客户端（可选，取决于是否找到 Qt6::Mqtt）
   QMediaPlayer *m_bgmPlayer = nullptr;        // 背景音乐播放器
   QAudioOutput *m_audioOutput = nullptr;      // 音频输出控制器

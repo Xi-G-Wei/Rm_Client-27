@@ -1,3 +1,6 @@
+#include "simulator/MockMatchSource.h"
+#include "ui/MatchUiProjection.h"
+
 #include <QJSValue>
 #include <QPointer>
 #include <QQmlComponent>
@@ -81,9 +84,11 @@ private slots:
   void initTestCase() {
     Q_INIT_RESOURCE(qml);
     Q_INIT_RESOURCE(resources);
+    Q_INIT_RESOURCE(mock);
   }
 
   void cleanupTestCase() {
+    Q_CLEANUP_RESOURCE(mock);
     Q_CLEANUP_RESOURCE(resources);
     Q_CLEANUP_RESOURCE(qml);
   }
@@ -422,6 +427,55 @@ private slots:
 
     QVERIFY(page->setProperty("heroCameraGridVisible", true));
     QTRY_VERIFY(camera->property("showGrid").toBool());
+  }
+
+  void testMockMatchSourceDrivesCommandDashboard() {
+    RM::MockMatchSource source;
+    QVERIFY2(
+        source.loadFromFile(
+            QStringLiteral(":/mock/3v3/match_3v3_basic.json")),
+        qPrintable(source.lastError()));
+    RM::MatchUiProjection projection(source.matchSession());
+
+    QQmlEngine engine;
+    TacticalMainWindowStub mainWindow;
+    engine.rootContext()->setContextProperty(QStringLiteral("mainWindow"),
+                                             &mainWindow);
+    engine.rootContext()->setContextProperty(QStringLiteral("mockMatchSource"),
+                                             &source);
+    engine.rootContext()->setContextProperty(QStringLiteral("mockUiSource"),
+                                             &projection);
+
+    QQmlComponent component(
+        &engine,
+        QUrl(QStringLiteral("qrc:/qml/Tactical/TacticalCommandPage.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> pageObject(component.create());
+    QVERIFY2(pageObject, qPrintable(component.errorString()));
+    auto *page = qobject_cast<QQuickItem *>(pageObject.data());
+    QVERIFY(page);
+    page->setWidth(1920);
+    page->setHeight(1080);
+
+    QTRY_VERIFY(page->property("uiFirstMode").toBool());
+    QTRY_VERIFY(page->property("commandDashboardActive").toBool());
+    QObject *clock =
+        page->findChild<QObject *>(QStringLiteral("dashboardMatchClock"));
+    QObject *redScore =
+        page->findChild<QObject *>(QStringLiteral("dashboardRedScore"));
+    QVERIFY(clock);
+    QVERIFY(redScore);
+
+    QVERIFY(source.start());
+    QVERIFY(source.advanceByMs(12000));
+    QVERIFY(source.pause());
+    QTRY_COMPARE(clock->property("text").toString(), QStringLiteral("05:00"));
+    QCOMPARE(redScore->property("text").toString(), QStringLiteral("0"));
+
+    QVERIFY(source.resume());
+    QVERIFY(source.advanceByMs(8000));
+    QVERIFY(source.pause());
+    QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("1"));
   }
 };
 
