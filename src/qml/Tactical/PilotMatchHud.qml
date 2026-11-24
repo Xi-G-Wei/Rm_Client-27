@@ -35,7 +35,7 @@ Item {
         anchors.leftMargin: header.margin
         anchors.rightMargin: Math.max(37, header.margin)
         anchors.topMargin: 3
-        height: root.compact ? 46 : 54
+        height: root.compact ? 54 : 62
         spacing: 8
         TeamRoster {
             Layout.fillWidth: true
@@ -72,6 +72,15 @@ Item {
                     || Number(modelData.hp || 0) <= 0
                 readonly property real superCap: Number(
                     modelData.energy?.superCapPercent ?? -1)
+                readonly property real powerW: Number(
+                    modelData.energy?.chassisPowerW ?? -1)
+                readonly property string driveText: {
+                    const drive = modelData.chassis?.driveTypeLabel || ""
+                    const wheel = modelData.wheelLeg?.telemetryAvailable
+                        ? (modelData.wheelLeg?.modeLabel || "") : ""
+                    const chassis = modelData.chassis?.modeLabel || ""
+                    return [drive, wheel || chassis].filter(v => v).join(" · ")
+                }
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: 1
@@ -85,20 +94,29 @@ Item {
                 opacity: !online ? 0.62 : dead ? 0.78 : 1.0
                 clip: true
 
-                ColumnLayout {
+                RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 6
+                    anchors.leftMargin: 4
                     anchors.rightMargin: 6
-                    anchors.topMargin: 3
+                    anchors.topMargin: 2
                     anchors.bottomMargin: 5
-                    spacing: 1
+                    spacing: 5
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
+                    Item {
+                        Layout.preferredWidth: root.compact ? 34 : 39
+                        Layout.fillHeight: true
+                        Image {
+                            anchors.fill: parent
+                            anchors.topMargin: 2
+                            anchors.bottomMargin: 5
+                            source: Format.portrait(wing.blue, seat.modelData.number)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            opacity: seat.online ? 1.0 : 0.35
+                        }
                         Rectangle {
-                            Layout.preferredWidth: 17
-                            Layout.preferredHeight: 15
+                            width: 17
+                            height: 15
                             radius: 2
                             color: "#172731"
                             border.color: Qt.alpha(wing.accent, 0.62)
@@ -110,49 +128,79 @@ Item {
                                 font.bold: true
                             }
                         }
-                        Text {
-                            Layout.fillWidth: true
-                            text: seat.modelData.name || "机器人"
-                            color: "#edf6fa"
-                            font.pixelSize: 10
-                            font.bold: true
-                            elide: Text.ElideRight
-                        }
-                        Rectangle {
-                            Layout.preferredWidth: 6
-                            Layout.preferredHeight: 6
-                            radius: 3
-                            color: !seat.online ? "#858b8f"
-                                : seat.dead ? "#ff8d83" : "#8fe2ae"
-                        }
                     }
 
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 4
+                        Layout.fillHeight: true
+                        spacing: 0
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            Text {
+                                Layout.fillWidth: true
+                                text: seat.modelData.name || "机器人"
+                                color: "#edf6fa"
+                                font.pixelSize: root.compact ? 10 : 11
+                                font.bold: true
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                text: Format.number(seat.modelData.hp)
+                                    + " / " + Format.number(seat.modelData.maxHp)
+                                color: "#f4f8fb"
+                                font.pixelSize: root.compact ? 10 : 11
+                                font.bold: true
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            Rectangle {
+                                Layout.preferredWidth: 6
+                                Layout.preferredHeight: 6
+                                radius: 3
+                                color: !seat.online ? "#858b8f"
+                                    : seat.dead ? "#ff8d83" : "#8fe2ae"
+                            }
+                            Text {
+                                text: !seat.online ? "离线"
+                                    : seat.dead ? "战亡" : "在场"
+                                color: !seat.online ? "#9aa1a5"
+                                    : seat.dead ? "#ff9b8e" : "#b8cbd7"
+                                font.pixelSize: 9
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                horizontalAlignment: Text.AlignRight
+                                text: "弹 " + Format.number(seat.modelData.ammo)
+                                    + "   热 "
+                                    + (Number(seat.modelData.heat ?? -1) >= 0
+                                        ? Math.round(Number(seat.modelData.heat)
+                                            / Math.max(1, Number(seat.modelData.maxHeat || 1))
+                                            * 100) + "%"
+                                        : "—")
+                                color: "#d4e2ea"
+                                font.pixelSize: 8
+                                elide: Text.ElideRight
+                            }
+                        }
+
                         Text {
                             Layout.fillWidth: true
-                            text: !seat.online ? "离线"
-                                : seat.dead ? "战亡" : "在场"
-                            color: !seat.online ? "#9aa1a5"
-                                : seat.dead ? "#ff9b8e" : "#b8cbd7"
-                            font.pixelSize: 9
-                        }
-                        Text {
-                            horizontalAlignment: Text.AlignRight
-                            text: Format.number(seat.modelData.hp)
-                                + " / " + Format.number(seat.modelData.maxHp)
-                            color: "#f4f8fb"
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
-                        Text {
-                            visible: seat.online && !seat.dead
-                                && seat.superCap >= 0
-                            text: "超电 " + Math.round(seat.superCap) + "%"
-                            color: seat.superCap < 20 ? "#ff9b8e"
-                                : seat.superCap < 50 ? "#f4cb87" : "#83d9bc"
+                            text: seat.superCap >= 0
+                                ? "超电 " + Math.round(seat.superCap) + "%"
+                                    + (seat.powerW >= 0 ? "  " + Math.round(seat.powerW) + "W" : "")
+                                    + (seat.driveText ? "  " + seat.driveText : "")
+                                : "仅显示公开数据"
+                            color: seat.superCap >= 0 && seat.superCap < 20
+                                ? "#ff9b8e"
+                                : seat.superCap >= 0 && seat.superCap < 50
+                                    ? "#f4cb87" : "#75d8bb"
                             font.pixelSize: 8
+                            elide: Text.ElideRight
                         }
                     }
                 }
