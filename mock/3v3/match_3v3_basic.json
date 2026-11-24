@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "id": "match_3v3_basic",
+  "name": "3v3 基础比赛",
+  "durationSec": 60,
+  "initial": {
+    "matchId": "mock-3v3-basic-001",
+    "phase": "preparation",
+    "timeRemainingSec": 5,
+    "round": 1,
+    "redTeam": {
+      "name": "红方",
+      "score": 0,
+      "robots": [
+        {
+          "id": "red-1",
+          "slot": 1,
+          "role": "heavy",
+          "health": 450,
+          "maxHealth": 450,
+          "ammo": 100,
+          "heat": 0,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 82.0,
+            "bufferEnergyJ": 48.0,
+            "bufferEnergyLimitJ": 60.0,
+            "chassisEnergyJ": 96.0,
+            "chassisEnergyLimitJ": 120.0,
+            "chassisPowerW": 42.0,
+            "chassisPowerLimitW": 100.0
+          },
+          "chassis": {
+            "mode": "follow",
+            "driveType": "wheel_leg",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {
+            "telemetryAvailable": true,
+            "mode": "wheel",
+            "stanceHeightMm": 220.0,
+            "pitchDegrees": 0.0,
+            "rollDegrees": 0.0,
+            "leftWheelSpeedMps": 0.0,
+            "rightWheelSpeedMps": 0.0,
+            "joints": []
+          },
+          "position": {"x": 0.2, "y": 0.5, "headingDegrees": 0.0}
+        },
+        {
+          "id": "red-3",
+          "slot": 3,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 10,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 74.0,
+            "bufferEnergyJ": 40.0,
+            "bufferEnergyLimitJ": 60.0,
+            "chassisEnergyJ": 80.0,
+            "chassisEnergyLimitJ": 120.0,
+            "chassisPowerW": 55.0,
+            "chassisPowerLimitW": 100.0
+          },
+          "chassis": {
+            "mode": "normal",
+            "driveType": "wheel_leg",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {
+            "telemetryAvailable": true,
+            "mode": "balance",
+            "stanceHeightMm": 240.0,
+            "pitchDegrees": 2.5,
+            "rollDegrees": -1.0,
+            "leftWheelSpeedMps": 1.2,
+            "rightWheelSpeedMps": 1.1,
+            "joints": [
+              {"name": "left_hip", "angleDegrees": 12.0, "targetAngleDegrees": 15.0},
+              {"name": "right_hip", "angleDegrees": -10.0, "targetAngleDegrees": -8.0}
+            ]
+          },
+          "position": {"x": 0.3, "y": 0.4, "headingDegrees": 30.0}
+        },
+        {
+          "id": "red-4",
+          "slot": 4,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 0,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 66.0,
+            "bufferEnergyJ": 36.0,
+            "bufferEnergyLimitJ": 60.0,
+            "chassisEnergyJ": 72.0,
+            "chassisEnergyLimitJ": 120.0,
+            "chassisPowerW": 32.0,
+            "chassisPowerLimitW": 100.0
+          },
+          "chassis": {
+            "mode": "follow",
+            "driveType": "wheel",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {"telemetryAvailable": false},
+          "position": {"x": 0.25, "y": 0.6, "headingDegrees": -20.0}
+        }
+      ]
+    },
+    "blueTeam": {
+      "name": "蓝方",
+      "score": 0,
+      "robots": [
+        {
+          "id": "blue-1",
+          "slot": 1,
+          "role": "heavy",
+          "health": 450,
+          "maxHealth": 450,
+          "ammo": 100,
+          "heat": 0,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 78.0,
+            "bufferEnergyJ": 44.0,
+            "bufferEnergyLimitJ": 60.0,
+            "chassisEnergyJ": 88.0,
+            "chassisEnergyLimitJ": 120.0,
+            "chassisPowerW": 45.0,
+            "chassisPowerLimitW": 100.0
+          },
+          "chassis": {
+            "mode": "follow",
+            "driveType": "wheel",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {"telemetryAvailable": false},
+          "position": {"x": 0.8, "y": 0.5, "headingDegrees": 180.0}
+        },
+        {
+          "id": "blue-3",
+          "slot": 3,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 0,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 69.0,
+            "bufferEnergyJ": 39.0,
+            "bufferEnergyLimitJ": 60.0,
+            "chassisEnergyJ": 76.0,
+            "chassisEnergyLimitJ": 120.0,
+            "chassisPowerW": 50.0,
+            "chassisPowerLimitW": 100.0
+          },
+          "chassis": {
+            "mode": "normal",
+            "driveType": "wheel_leg",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {
+            "telemetryAvailable": true,
+            "mode": "balance",
+            "stanceHeightMm": 230.0,
+            "pitchDegrees": -1.5,
+            "rollDegrees": 0.8,
+            "leftWheelSpeedMps": -0.8,
+            "rightWheelSpeedMps": -0.7,
+            "joints": []
+          },
+          "position": {"x": 0.7, "y": 0.6, "headingDegrees": 160.0}
+        },
+        {
+          "id": "blue-4",
+          "slot": 4,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 0,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 63.0,
+            "bufferEnergyJ": 34.0,
+            "bufferEnergyLimitJ": 60.0,
+            "chassisEnergyJ": 70.0,
+            "chassisEnergyLimitJ": 120.0,
+            "chassisPowerW": 30.0,
+            "chassisPowerLimitW": 100.0
+          },
+          "chassis": {
+            "mode": "follow",
+            "driveType": "wheel",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {"telemetryAvailable": false},
+          "position": {"x": 0.75, "y": 0.4, "headingDegrees": 200.0}
+        }
+      ]
+    }
+  },
+  "timeline": [
+    {
+      "atSec": 0,
+      "events": [
+        {"type": "preparation", "message": "模拟比赛准备"}
+      ]
+    },
+    {
+      "atSec": 2,
+      "phase": "self_check",
+      "timeRemainingSec": 15,
+      "events": [
+        {"type": "self_check", "message": "裁判系统进入 15 秒自检"}
+      ]
+    },
+    {
+      "atSec": 7,
+      "phase": "countdown",
+      "timeRemainingSec": 5,
+      "events": [
+        {"type": "countdown", "message": "裁判系统进入 5 秒倒计时"}
+      ]
+    },
+    {
+      "atSec": 12,
+      "phase": "battle",
+      "timeRemainingSec": 300,
+      "events": [
+        {"type": "battle_started", "message": "比赛开始"}
+      ]
+    },
+    {
+      "atSec": 20,
+      "redScore": 1,
+      "events": [
+        {"type": "score", "message": "红方控制区得分", "side": "red"}
+      ]
+    },
+    {
+      "atSec": 30,
+      "robotUpdates": [
+        {
+          "id": "blue-3",
+          "health": 220,
+          "heat": 80,
+          "superCapPercent": 45.0,
+          "chassisPowerW": 92.0
+        }
+      ],
+      "events": [
+        {"type": "damage", "message": "蓝方步兵 3 号受到 180 点伤害", "side": "blue", "robotSlot": 3}
+      ]
+    },
+    {
+      "atSec": 40,
+      "robotUpdates": [
+        {
+          "id": "red-3",
+          "superCapPercent": 25.0,
+          "bufferEnergyJ": 18.0,
+          "chassisPowerW": 97.0,
+          "chassisMode": "spin",
+          "wheelLegMode": "transition"
+        }
+      ],
+      "events": [
+        {"type": "wheel_leg", "message": "红方步兵 3 号进入轮腿切换", "side": "red", "robotSlot": 3}
+      ]
+    },
+    {
+      "atSec": 60,
+      "phase": "settlement",
+      "timeRemainingSec": 0,
+      "redScore": 2,
+      "events": [
+        {"type": "settlement", "message": "模拟比赛进入结算", "side": "red"}
+      ]
+    }
+  ]
+}

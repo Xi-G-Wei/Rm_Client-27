@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "id": "match_3v3_offline",
+  "name": "3v3 离线与恢复",
+  "durationSec": 25,
+  "initial": {
+    "matchId": "mock-3v3-offline-001",
+    "phase": "battle",
+    "timeRemainingSec": 60,
+    "round": 1,
+    "redTeam": {
+      "name": "红方",
+      "score": 0,
+      "robots": [
+        {"id": "red-1", "slot": 1, "role": "heavy", "health": 450, "maxHealth": 450, "ammo": 100, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "red-3", "slot": 3, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 20, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "red-4", "slot": 4, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0}
+      ]
+    },
+    "blueTeam": {
+      "name": "蓝方",
+      "score": 0,
+      "robots": [
+        {"id": "blue-1", "slot": 1, "role": "heavy", "health": 450, "maxHealth": 450, "ammo": 100, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "blue-3", "slot": 3, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "blue-4", "slot": 4, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0}
+      ]
+    }
+  },
+  "timeline": [
+    {
+      "atSec": 5,
+      "robotUpdates": [
+        {"id": "red-3", "online": false, "alive": false}
+      ],
+      "events": [
+        {"type": "offline", "message": "红方步兵 3 号数据中断", "side": "red", "robotSlot": 3}
+      ]
+    },
+    {
+      "atSec": 10,
+      "robotUpdates": [
+        {"id": "red-3", "superCapPercent": 12.0, "bufferEnergyJ": 8.0}
+      ]
+    },
+    {
+      "atSec": 15,
+      "robotUpdates": [
+        {"id": "red-3", "online": true, "alive": true}
+      ],
+      "events": [
+        {"type": "reconnected", "message": "红方步兵 3 号数据恢复", "side": "red", "robotSlot": 3}
+      ]
+    },
+    {
+      "atSec": 20,
+      "robotUpdates": [
+        {"id": "red-3", "superCapPercent": 18.0, "chassisMode": "protect"}
+      ],
+      "events": [
+        {"type": "low_super_cap", "message": "红方步兵 3 号超电低于 20%", "side": "red", "robotSlot": 3}
+      ]
+    }
+  ]
+}

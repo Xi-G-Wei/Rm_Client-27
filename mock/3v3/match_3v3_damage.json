@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "match_3v3_damage",
+  "name": "3v3 受伤与复活",
+  "durationSec": 45,
+  "initial": {
+    "matchId": "mock-3v3-damage-001",
+    "phase": "battle",
+    "timeRemainingSec": 120,
+    "round": 1,
+    "redTeam": {
+      "name": "红方",
+      "score": 1,
+      "robots": [
+        {"id": "red-1", "slot": 1, "role": "heavy", "health": 450, "maxHealth": 450, "ammo": 100, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "red-3", "slot": 3, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 20, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "red-4", "slot": 4, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 10, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0}
+      ]
+    },
+    "blueTeam": {
+      "name": "蓝方",
+      "score": 1,
+      "robots": [
+        {"id": "blue-1", "slot": 1, "role": "heavy", "health": 450, "maxHealth": 450, "ammo": 100, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "blue-3", "slot": 3, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 30, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "blue-4", "slot": 4, "role": "infantry", "health": 400, "maxHealth": 400, "ammo": 150, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0}
+      ]
+    }
+  },
+  "timeline": [
+    {
+      "atSec": 5,
+      "robotUpdates": [
+        {"id": "blue-3", "health": 180, "heat": 120}
+      ],
+      "events": [
+        {"type": "damage", "message": "蓝方步兵 3 号剩余血量 180", "side": "blue", "robotSlot": 3}
+      ]
+    },
+    {
+      "atSec": 10,
+      "robotUpdates": [
+        {"id": "blue-3", "health": 0, "alive": false, "respawnRemainingSec": 36}
+      ],
+      "events": [
+        {"type": "kill", "message": "蓝方步兵 3 号阵亡", "side": "blue", "robotSlot": 3}
+      ]
+    },
+    {
+      "atSec": 30,
+      "robotUpdates": [
+        {"id": "blue-3", "respawnRemainingSec": 10}
+      ],
+      "events": [
+        {"type": "respawn_progress", "message": "蓝方步兵 3 号复活读条剩余 10 秒", "side": "blue", "robotSlot": 3}
+      ]
+    },
+    {
+      "atSec": 40,
+      "robotUpdates": [
+        {"id": "blue-3", "health": 400, "alive": true, "respawnRemainingSec": 0}
+      ],
+      "events": [
+        {"type": "respawn", "message": "蓝方步兵 3 号重新上场", "side": "blue", "robotSlot": 3}
+      ]
+    }
+  ]
+}

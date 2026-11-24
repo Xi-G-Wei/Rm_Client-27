@@ -344,6 +344,8 @@ QString matchPhaseKey(MatchPhase phase) {
     switch (phase) {
     case MatchPhase::NotStarted: return QStringLiteral("not_started");
     case MatchPhase::Preparation: return QStringLiteral("preparation");
+    case MatchPhase::SelfCheck: return QStringLiteral("self_check");
+    case MatchPhase::Countdown: return QStringLiteral("countdown");
     case MatchPhase::Battle: return QStringLiteral("battle");
     case MatchPhase::Settlement: return QStringLiteral("settlement");
     }
@@ -354,6 +356,8 @@ QString matchPhaseLabel(MatchPhase phase) {
     switch (phase) {
     case MatchPhase::NotStarted: return QStringLiteral("未开始");
     case MatchPhase::Preparation: return QStringLiteral("准备阶段");
+    case MatchPhase::SelfCheck: return QStringLiteral("裁判系统自检");
+    case MatchPhase::Countdown: return QStringLiteral("5 秒倒计时");
     case MatchPhase::Battle: return QStringLiteral("比赛中");
     case MatchPhase::Settlement: return QStringLiteral("结算中");
     }

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "match_3v3_settlement",
+  "name": "3v3 结算阶段",
+  "durationSec": 20,
+  "initial": {
+    "matchId": "mock-3v3-settlement-001",
+    "phase": "battle",
+    "timeRemainingSec": 8,
+    "round": 1,
+    "redTeam": {
+      "name": "红方",
+      "score": 2,
+      "robots": [
+        {"id": "red-1", "slot": 1, "role": "heavy", "health": 260, "maxHealth": 450, "ammo": 60, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "red-3", "slot": 3, "role": "infantry", "health": 160, "maxHealth": 400, "ammo": 80, "heat": 40, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "red-4", "slot": 4, "role": "infantry", "health": 0, "maxHealth": 400, "ammo": 90, "heat": 0, "heatLimit": 200, "online": true, "alive": false, "respawnRemainingSec": 20}
+      ]
+    },
+    "blueTeam": {
+      "name": "蓝方",
+      "score": 1,
+      "robots": [
+        {"id": "blue-1", "slot": 1, "role": "heavy", "health": 120, "maxHealth": 450, "ammo": 40, "heat": 0, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "blue-3", "slot": 3, "role": "infantry", "health": 90, "maxHealth": 400, "ammo": 50, "heat": 60, "heatLimit": 200, "online": true, "alive": true, "respawnRemainingSec": 0},
+        {"id": "blue-4", "slot": 4, "role": "infantry", "health": 0, "maxHealth": 400, "ammo": 30, "heat": 0, "heatLimit": 200, "online": true, "alive": false, "respawnRemainingSec": 15}
+      ]
+    }
+  },
+  "timeline": [
+    {
+      "atSec": 8,
+      "phase": "settlement",
+      "timeRemainingSec": 0,
+      "redScore": 3,
+      "events": [
+        {"type": "settlement", "message": "红方获胜", "side": "red"}
+      ]
+    }
+  ]
+}

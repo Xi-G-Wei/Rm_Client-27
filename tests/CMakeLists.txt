@@ -36,6 +36,13 @@ add_executable(test_match_session unit/test_match_session.cpp)
 target_link_libraries(test_match_session PRIVATE Qt6::Core Qt6::Test RoboMasterClientLib)
 rm26_add_qt_test(TestMatchSession test_match_session)
 
+# 本地 JSON 比赛源、时钟与时间线测试
+add_executable(test_mock_match_source unit/test_mock_match_source.cpp)
+target_link_libraries(test_mock_match_source PRIVATE Qt6::Core Qt6::Test RoboMasterClientLib)
+target_compile_definitions(test_mock_match_source PRIVATE
+    RM_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+rm26_add_qt_test(TestMockMatchSource test_mock_match_source)
+
 # 血条组件测试
 add_executable(test_health_bar unit/test_health_bar.cpp)
 target_link_libraries(test_health_bar PRIVATE Qt6::Core Qt6::Widgets Qt6::Test RoboMasterClientLib)

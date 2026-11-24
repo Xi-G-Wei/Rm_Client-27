@@ -308,6 +308,7 @@ set(SOURCES
     src/widgets/InfoPanel.cpp
     src/widgets/OperationsPanel.cpp
     src/simulator/ProtocolSimulator.cpp
+    src/simulator/MockMatchSource.cpp
     src/network/Protocol.cpp
     src/network/NetworkManager.cpp
     src/network/VideoReceiver.cpp
@@ -368,6 +369,7 @@ set(HEADERS
     src/widgets/OperationsPanel.h
     src/widgets/DebugLogWidget.h
     src/simulator/ProtocolSimulator.h
+    src/simulator/MockMatchSource.h
     src/network/Protocol.h
     src/network/NetworkManager.h
     src/network/CRC.h

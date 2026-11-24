@@ -14,6 +14,8 @@ namespace RM {
 enum class MatchPhase {
     NotStarted,
     Preparation,
+    SelfCheck,
+    Countdown,
     Battle,
     Settlement,
 };
