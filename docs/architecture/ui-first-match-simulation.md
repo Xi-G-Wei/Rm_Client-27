@@ -173,6 +173,11 @@ statusText()
 正式启动默认选择真实源占位；设置 `RM_UI_FIRST_MOCK=1` 时选择模拟源。未来实现
 真实协议时，只需提供新的 `MatchDataSource` 实现，并继续写入 `MatchSession`。
 
+现有网络层已经通过 `GameDataMatchSource` 接入：MQTT/NetworkManager 写入
+`GameData` 后，适配器每秒检查并生成 RMUL 3v3 `MatchSnapshot`。没有有效 3v3
+数据时，新 UI 不会激活，原有客户端界面继续工作。因此后续调整 MQTT 字段时，
+只需要同步更新 `GameData` 和适配器映射。
+
 `MatchDataHealth` 统一评估比赛快照：
 
 - 1.5 秒内为 Fresh

@@ -1,4 +1,6 @@
 #include "core/MatchDataHealth.h"
+#include "core/GameData.h"
+#include "core/GameDataMatchSource.h"
 #include "core/MatchSourceController.h"
 #include "core/MatchSnapshotJson.h"
 #include "simulator/MatchRecorder.h"
@@ -172,6 +174,44 @@ private slots:
         QCOMPARE(controller.sourceKind(), QStringLiteral("replay"));
         QVERIFY(controller.isActive());
         QVERIFY(controller.matchSession()->isValid());
+    }
+
+    void gameDataAdapterBuildsThreeVersusThreeSnapshot() {
+        GameData gameData;
+        gameData.setMatchProfile(RM::MatchProfile::Rmul3v3);
+        gameData.setCurrentRobotId(3);
+        gameData.updateGameStateFromS1(
+            static_cast<int>(GameStage::BATTLE), 300, 2, 1, 1, false);
+        RobotData &current = gameData.getRobotDataRef(3);
+        current.currentHP = 320;
+        current.maxHP = 400;
+        current.currentHeat = 45;
+        current.heatLimit = 200;
+        current.allowedAmmo17mm = 80;
+        current.bufferEnergy = 42;
+        current.maxBufferEnergy = 60;
+        current.superCapEnergyPercent = 72.5f;
+        current.status = RobotStatus::NORMAL;
+        current.isClientConnected = true;
+        current.lastUpdateTime = QDateTime::currentDateTime();
+
+        RM::GameDataMatchSource source(&gameData);
+        source.refresh();
+        QVERIFY2(source.isAvailable(), qPrintable(source.statusText()));
+        QCOMPARE(source.sourceKind(), QStringLiteral("real"));
+        const RM::MatchSnapshot snapshot =
+            source.matchSession()->matchSnapshot();
+        QCOMPARE(snapshot.phase, RM::MatchPhase::Battle);
+        QCOMPARE(snapshot.timeRemainingSec, 300);
+        QCOMPARE(snapshot.redTeam.robots.size(), 3);
+        QCOMPARE(snapshot.blueTeam.robots.size(), 3);
+        QCOMPARE(snapshot.redTeam.robots[1].id, QStringLiteral("red-3"));
+        QCOMPARE(snapshot.redTeam.robots[1].telemetryScope,
+                 RM::MatchTelemetryScope::Private);
+        QCOMPARE(snapshot.blueTeam.robots[1].telemetryScope,
+                 RM::MatchTelemetryScope::Public);
+        QCOMPARE(snapshot.redTeam.robots[1].health, 320);
+        QCOMPARE(snapshot.redTeam.robots[1].energy.superCapPercent, 72.5);
     }
 };
 

@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QPointer>
 
+class GameData;
+
 namespace RM {
 
 class MatchDataSource;
@@ -21,7 +23,7 @@ public:
 
     bool selectMock(const QString &scenarioPath = QString());
     bool selectReplay(const QString &recordingPath);
-    bool selectReal();
+    bool selectReal(::GameData *gameData = nullptr);
 
     MatchDataSource *currentSource() const;
     MatchSession *matchSession() const;

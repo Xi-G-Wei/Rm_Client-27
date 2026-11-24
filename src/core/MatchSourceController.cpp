@@ -1,6 +1,7 @@
 #include "core/MatchSourceController.h"
 
 #include "core/MatchDataSource.h"
+#include "core/GameDataMatchSource.h"
 #include "core/MatchSession.h"
 #include "simulator/MockMatchSource.h"
 #include "simulator/MatchReplaySource.h"
@@ -56,8 +57,12 @@ bool MatchSourceController::selectMock(const QString &scenarioPath) {
     return true;
 }
 
-bool MatchSourceController::selectReal() {
-    auto *candidate = new UnavailableMatchSource(this);
+bool MatchSourceController::selectReal(::GameData *gameData) {
+    auto *candidate = gameData
+        ? static_cast<MatchDataSource *>(
+              new GameDataMatchSource(gameData, this))
+        : static_cast<MatchDataSource *>(
+              new UnavailableMatchSource(this));
     m_mockSource = nullptr;
     replaceSource(candidate);
     return true;

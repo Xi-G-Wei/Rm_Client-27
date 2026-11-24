@@ -333,6 +333,7 @@ set(SOURCES
     src/network/S1ProtocolManager.cpp
     ${PROTO_SRCS}
     src/core/GameData.cpp
+    src/core/GameDataMatchSource.cpp
     src/core/CommandDashboardData.cpp
     src/core/MatchSession.cpp
     src/core/MatchSourceController.cpp
@@ -389,6 +390,7 @@ set(HEADERS
     src/network/H264StreamRecoveryPolicy.h
     src/network/S1ProtocolManager.h
     src/core/GameData.h
+    src/core/GameDataMatchSource.h
     src/core/MatchSession.h
     src/core/MatchDataSource.h
     src/core/MatchSourceController.h

@@ -2515,7 +2515,13 @@ void MainWindow::createCenterArea() {
       qWarning() << "UI-first mock load failed:" << scenarioPath;
     }
   } else if (!m_mockMatchSource && !m_matchUiProjection) {
-    m_matchSourceController->selectReal();
+    m_matchSourceController->selectReal(m_gameData);
+  }
+  if (!m_matchUiProjection && m_matchSourceController->matchSession()) {
+    m_matchUiProjection = new RM::MatchUiProjection(
+        m_matchSourceController->matchSession(),
+        this,
+        m_matchSourceController->sourceKind());
   }
   if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {
     if (m_matchUiProjection) {
