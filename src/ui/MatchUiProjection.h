@@ -40,9 +40,29 @@ class MatchUiProjection : public QObject {
     Q_PROPERTY(int blueScore READ blueScore NOTIFY updated)
     Q_PROPERTY(int currentRound READ currentRound NOTIFY updated)
     Q_PROPERTY(QString gamePhase READ gamePhase NOTIFY updated)
+    Q_PROPERTY(bool is_paused READ isPaused NOTIFY updated)
+    Q_PROPERTY(bool uses2027Protocol READ uses2027Protocol CONSTANT)
     Q_PROPERTY(QVariantMap territoryStatus READ territoryStatus NOTIFY updated)
     Q_PROPERTY(QString redTeamName READ redTeamName NOTIFY updated)
     Q_PROPERTY(QString blueTeamName READ blueTeamName NOTIFY updated)
+    Q_PROPERTY(int redBaseHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int redBaseMaxHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueBaseHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueBaseMaxHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int redOutpostHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int redOutpostMaxHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueOutpostHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueOutpostMaxHealth READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int redOutpostRebuildCount READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueOutpostRebuildCount READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int redOutpostMaxRebuildCount READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueOutpostMaxRebuildCount READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int redEconomy READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueEconomy READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int redDefenseBonus READ zeroInt NOTIFY updated)
+    Q_PROPERTY(int blueDefenseBonus READ zeroInt NOTIFY updated)
+    Q_PROPERTY(bool redBaseInvincible READ falseValue NOTIFY updated)
+    Q_PROPERTY(bool blueBaseInvincible READ falseValue NOTIFY updated)
 
 public:
     explicit MatchUiProjection(MatchSession *session,
@@ -75,9 +95,13 @@ public:
     int blueScore() const;
     int currentRound() const;
     QString gamePhase() const;
+    bool isPaused() const;
+    bool uses2027Protocol() const;
     QVariantMap territoryStatus() const;
     QString redTeamName() const;
     QString blueTeamName() const;
+    int zeroInt() const;
+    bool falseValue() const;
 
 signals:
     void updated();

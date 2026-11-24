@@ -5,6 +5,7 @@ import QtQuick.Layouts
 
 Rectangle {
     id: root
+    objectName: "dashboardMatchHeader"
 
     required property var game
     required property var dashboard
@@ -17,9 +18,14 @@ Rectangle {
     readonly property color blueAccent: "#85c6f2"
     readonly property int side: Number(dashboard.leadingSide || 0)
     readonly property int margin: Math.max(12, Math.min(26, Math.round(width * 0.0115)))
-    readonly property int clockHeight: compact ? 51 : 66
+    readonly property int clockHeight: compact ? 58 : 74
     readonly property int clockWidth: Math.max(220, Math.round((width - 2 * margin - 28) * 0.45 / 2.45))
-    implicitHeight: bases ? (compact ? 84 : 106) : (compact ? 71 : 90)
+    readonly property int advantageHeight: 16
+    readonly property int contentHeight: clockHeight + 3 + advantageHeight
+        + (compact ? 6 : 10)
+    implicitHeight: Math.max(bases ? (compact ? 84 : 106) : 0,
+                             contentHeight)
+    height: implicitHeight
     readonly property bool hasSnapshot: snapshot && snapshot.timeRemainingSec !== undefined
     readonly property int remainingSeconds: hasSnapshot
         ? Number(snapshot.timeRemainingSec || 0)
@@ -82,7 +88,10 @@ Rectangle {
             spacing: 3
             Item {
                 Layout.fillWidth: true
+                Layout.minimumHeight: root.clockHeight
                 Layout.preferredHeight: root.clockHeight
+                Layout.maximumHeight: root.clockHeight
+                clip: true
                 Canvas {
                     anchors.fill: parent
                     onWidthChanged: requestPaint()
@@ -145,7 +154,7 @@ Rectangle {
                             text: root.clock
                             color: "#fbfcff"
                             font.family: "Bahnschrift"
-                            font.pixelSize: root.compact ? 35 : Math.min(59, Math.round(root.width * 0.0305))
+                            font.pixelSize: root.compact ? 33 : Math.min(52, Math.round(root.width * 0.028))
                             font.weight: Font.ExtraBold
                         }
                     }
@@ -162,9 +171,12 @@ Rectangle {
                 }
             }
             Rectangle {
+                visible: !root.hasSnapshot
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: Math.min(root.clockWidth, advantage.implicitWidth + 24)
-                Layout.preferredHeight: 16
+                Layout.minimumHeight: root.advantageHeight
+                Layout.preferredHeight: root.advantageHeight
+                Layout.maximumHeight: root.advantageHeight
                 color: "#6611202c"
                 Rectangle { width: 1; height: parent.height; color: "#70657786" }
                 Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: "#70657786" }

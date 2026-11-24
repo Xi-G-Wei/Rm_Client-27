@@ -463,8 +463,78 @@ private slots:
         page->findChild<QObject *>(QStringLiteral("dashboardMatchClock"));
     QObject *redScore =
         page->findChild<QObject *>(QStringLiteral("dashboardRedScore"));
+    auto *clockItem = qobject_cast<QQuickItem *>(clock);
+    auto *advantageLabel = qobject_cast<QQuickItem *>(
+        page->findChild<QObject *>(
+            QStringLiteral("commandAdvantageLabel")));
     QVERIFY(clock);
     QVERIFY(redScore);
+    QVERIFY(clockItem);
+    QVERIFY(advantageLabel);
+    QVERIFY(!advantageLabel->isVisible());
+
+    QVERIFY(source.start());
+    QVERIFY(source.advanceByMs(12000));
+    QVERIFY(source.pause());
+    QTRY_COMPARE(clock->property("text").toString(), QStringLiteral("05:00"));
+    QCOMPARE(redScore->property("text").toString(), QStringLiteral("0"));
+
+    QVERIFY(source.resume());
+    QVERIFY(source.advanceByMs(8000));
+    QVERIFY(source.pause());
+    QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("1"));
+
+    QVERIFY(source.resume());
+    QVERIFY(source.advanceByMs(40000));
+    QTRY_COMPARE(clock->property("text").toString(), QStringLiteral("00:00"));
+    QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("2"));
+  }
+
+  void testTopInfoBarUsesMockMatchSource() {
+    RM::MockMatchSource source;
+    QVERIFY(source.loadFromFile(
+        QStringLiteral(":/mock/3v3/match_3v3_basic.json")));
+    RM::MatchUiProjection projection(source.matchSession());
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/TopInfoBar.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    const QVariantMap initialProperties{
+        {QStringLiteral("tacticalSource"), QVariant::fromValue(&projection)},
+        {QStringLiteral("uiFirstSource"), QVariant::fromValue(&projection)},
+    };
+    QScopedPointer<QObject> rootObject(
+        component.createWithInitialProperties(initialProperties));
+    QVERIFY2(rootObject, qPrintable(component.errorString()));
+    auto *rootItem = qobject_cast<QQuickItem *>(rootObject.data());
+    QVERIFY(rootItem);
+    rootItem->setWidth(1920);
+    rootItem->setHeight(170);
+
+    QTRY_VERIFY(rootObject->property("currentSeason").toBool());
+    QObject *hud = nullptr;
+    QTRY_VERIFY((hud = rootObject->findChild<QObject *>(
+                     QStringLiteral("pilotMatchHud"))) != nullptr);
+    QObject *clock = nullptr;
+    QObject *redScore = nullptr;
+    QObject *blueScore = nullptr;
+    QTRY_VERIFY((clock = hud->findChild<QObject *>(
+                     QStringLiteral("dashboardMatchClock"))) != nullptr);
+    QTRY_VERIFY((redScore = hud->findChild<QObject *>(
+                     QStringLiteral("dashboardRedScore"))) != nullptr);
+    QTRY_VERIFY((blueScore = hud->findChild<QObject *>(
+                     QStringLiteral("dashboardBlueScore"))) != nullptr);
+    auto *hudItem = qobject_cast<QQuickItem *>(hud);
+    auto *redScoreItem = qobject_cast<QQuickItem *>(redScore);
+    auto *blueScoreItem = qobject_cast<QQuickItem *>(blueScore);
+    QVERIFY(hudItem);
+    QVERIFY(redScoreItem);
+    QVERIFY(blueScoreItem);
+    const QRectF redRect = redScoreItem->mapRectToItem(
+        hudItem, QRectF(0, 0, redScoreItem->width(), redScoreItem->height()));
+    const QRectF blueRect = blueScoreItem->mapRectToItem(
+        hudItem, QRectF(0, 0, blueScoreItem->width(), blueScoreItem->height()));
+    QVERIFY(qAbs(redRect.center().y() - blueRect.center().y()) <= 1.0);
 
     QVERIFY(source.start());
     QVERIFY(source.advanceByMs(12000));

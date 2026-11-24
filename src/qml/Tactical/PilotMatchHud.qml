@@ -9,6 +9,7 @@ Item {
 
     required property var game
     required property var dashboard
+    property var snapshot: ({})
     required property string redTeamName
     required property string blueTeamName
     property bool compact: false
@@ -19,6 +20,7 @@ Item {
         width: parent.width
         game: root.game
         dashboard: root.dashboard
+        snapshot: root.snapshot
         redTeamName: root.redTeamName
         blueTeamName: root.blueTeamName
         compact: root.compact

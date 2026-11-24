@@ -424,7 +424,8 @@ Item {
             KeyTip { keyText: "Ctrl+T"; label: "切换操作界面" }
             Item { Layout.fillWidth: true }
             Text {
-                text: root.dashboard.mockMode ? "本地模拟运行中"
+                text: root.dashboard.mockMode
+                    ? (root.dashboard.leadText || "本地模拟") + " · 运行中"
                     : root.dashboard.statusFresh ? "裁判数据更新中" : "等待裁判数据"
                 color: root.dashboard.statusFresh ? "#a6dfc8" : "#e3bc83"
                 font.pixelSize: 10

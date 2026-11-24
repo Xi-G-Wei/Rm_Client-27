@@ -2483,8 +2483,15 @@ void MainWindow::createCenterArea() {
     }
   }
   if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {
-    m_qmlTopInfoBar->rootObject()->setProperty(
-        "tacticalSource", QVariant::fromValue(m_tacticalAnalyzer));
+    if (m_matchUiProjection) {
+      m_qmlTopInfoBar->rootObject()->setProperty(
+          "tacticalSource", QVariant::fromValue(m_matchUiProjection));
+      m_qmlTopInfoBar->rootObject()->setProperty(
+          "uiFirstSource", QVariant::fromValue(m_matchUiProjection));
+    } else {
+      m_qmlTopInfoBar->rootObject()->setProperty(
+          "tacticalSource", QVariant::fromValue(m_tacticalAnalyzer));
+    }
   }
 
   m_qmlTacticalPage = new QQuickWidget(m_centralWidget);

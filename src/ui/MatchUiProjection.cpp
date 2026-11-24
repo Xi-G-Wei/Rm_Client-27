@@ -391,6 +391,14 @@ QString MatchUiProjection::gamePhase() const {
                      : QStringLiteral("等待开赛");
 }
 
+bool MatchUiProjection::isPaused() const {
+    return false;
+}
+
+bool MatchUiProjection::uses2027Protocol() const {
+    return true;
+}
+
 QVariantMap MatchUiProjection::territoryStatus() const {
     return {};
 }
@@ -403,6 +411,14 @@ QString MatchUiProjection::redTeamName() const {
 QString MatchUiProjection::blueTeamName() const {
     return m_session ? m_session->matchSnapshot().blueTeam.name
                      : QStringLiteral("蓝方");
+}
+
+int MatchUiProjection::zeroInt() const {
+    return 0;
+}
+
+bool MatchUiProjection::falseValue() const {
+    return false;
 }
 
 } // namespace RM

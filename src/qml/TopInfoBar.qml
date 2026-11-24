@@ -25,42 +25,45 @@ Item {
     readonly property var gameDataContext: typeof gameData !== "undefined" ? gameData : null
     // qmllint enable unqualified
     property var tacticalSource: null
-    property int redBaseHP: gameDataContext ? gameDataContext.redBaseHealth : 2500
-    property int redBaseMaxHP: gameDataContext ? gameDataContext.redBaseMaxHealth : 5000
-    property int blueBaseHP: gameDataContext ? gameDataContext.blueBaseHealth : 3000
-    property int blueBaseMaxHP: gameDataContext ? gameDataContext.blueBaseMaxHealth : 5000
-    property int redOutpostHP: gameDataContext ? gameDataContext.redOutpostHealth : 1500
-    property int redOutpostMaxHP: gameDataContext ? gameDataContext.redOutpostMaxHealth : 1500
-    property int blueOutpostHP: gameDataContext ? gameDataContext.blueOutpostHealth : 1500
-    property int blueOutpostMaxHP: gameDataContext ? gameDataContext.blueOutpostMaxHealth : 1500
-    property int redOutpostRebuildCount: gameDataContext ? gameDataContext.redOutpostRebuildCount : 2
-    property int blueOutpostRebuildCount: gameDataContext ? gameDataContext.blueOutpostRebuildCount : 2
-    property int redOutpostMaxRebuildCount: gameDataContext ? gameDataContext.redOutpostMaxRebuildCount : 2
-    property int blueOutpostMaxRebuildCount: gameDataContext ? gameDataContext.blueOutpostMaxRebuildCount : 2
+    property var uiFirstSource: null
+    readonly property bool uiFirstMode: Boolean(root.uiFirstSource?.active)
+    readonly property var activeGame: root.uiFirstMode ? root.uiFirstSource : root.gameDataContext
+    property int redBaseHP: activeGame ? activeGame.redBaseHealth : 2500
+    property int redBaseMaxHP: activeGame ? activeGame.redBaseMaxHealth : 5000
+    property int blueBaseHP: activeGame ? activeGame.blueBaseHealth : 3000
+    property int blueBaseMaxHP: activeGame ? activeGame.blueBaseMaxHealth : 5000
+    property int redOutpostHP: activeGame ? activeGame.redOutpostHealth : 1500
+    property int redOutpostMaxHP: activeGame ? activeGame.redOutpostMaxHealth : 1500
+    property int blueOutpostHP: activeGame ? activeGame.blueOutpostHealth : 1500
+    property int blueOutpostMaxHP: activeGame ? activeGame.blueOutpostMaxHealth : 1500
+    property int redOutpostRebuildCount: activeGame ? activeGame.redOutpostRebuildCount : 2
+    property int blueOutpostRebuildCount: activeGame ? activeGame.blueOutpostRebuildCount : 2
+    property int redOutpostMaxRebuildCount: activeGame ? activeGame.redOutpostMaxRebuildCount : 2
+    property int blueOutpostMaxRebuildCount: activeGame ? activeGame.blueOutpostMaxRebuildCount : 2
     property bool showOutpostModule: true
-    property int redScore: gameDataContext ? gameDataContext.redScore : 0
-    property int blueScore: gameDataContext ? gameDataContext.blueScore : 0
-    property int currentRound: gameDataContext ? gameDataContext.currentRound : 1
-    property int gameTime: gameDataContext ? gameDataContext.remainingTime : 420
-    property string gamePhase: gameDataContext ? gameDataContext.gamePhase : "未开始"
-    property bool gamePaused: gameDataContext ? gameDataContext.is_paused : false
-    property int redEconomy: gameDataContext ? gameDataContext.redEconomy : 550
-    property int blueEconomy: gameDataContext ? gameDataContext.blueEconomy : 550
-    property string redTeamName: gameDataContext ? gameDataContext.redTeamName : "红方"
-    property string blueTeamName: gameDataContext ? gameDataContext.blueTeamName : "蓝方"
+    property int redScore: activeGame ? activeGame.redScore : 0
+    property int blueScore: activeGame ? activeGame.blueScore : 0
+    property int currentRound: activeGame ? activeGame.currentRound : 1
+    property int gameTime: activeGame ? activeGame.remainingTime : 420
+    property string gamePhase: activeGame ? activeGame.gamePhase : "未开始"
+    property bool gamePaused: activeGame ? Boolean(activeGame.is_paused) : false
+    property int redEconomy: activeGame ? activeGame.redEconomy : 550
+    property int blueEconomy: activeGame ? activeGame.blueEconomy : 550
+    property string redTeamName: activeGame ? activeGame.redTeamName : "红方"
+    property string blueTeamName: activeGame ? activeGame.blueTeamName : "蓝方"
 
     // 顶部栏只允许显示已有真实字段，禁止继续展示 mock 占领/固定 buff 值
-    property int redDefenseBonus: gameDataContext ? gameDataContext.redDefenseBonus : 0
-    property int blueDefenseBonus: gameDataContext ? gameDataContext.blueDefenseBonus : 0
-    property bool redInvincible: gameDataContext ? (gameDataContext.redBaseInvincible || false) : false
-    property bool blueInvincible: gameDataContext ? (gameDataContext.blueBaseInvincible || false) : false
-    readonly property bool hasBases: root.gameDataContext
-        ? Boolean(root.gameDataContext.hasBases) : true
-    readonly property bool showControlPoints: root.gameDataContext
-        ? Boolean(root.gameDataContext.hasControlPoints) : false
-    readonly property bool currentSeason: root.gameDataContext
-        ? Boolean(root.gameDataContext.uses2027Protocol) : false
-    readonly property var territory: root.gameDataContext ? root.gameDataContext.territoryStatus : ({})
+    property int redDefenseBonus: activeGame ? activeGame.redDefenseBonus : 0
+    property int blueDefenseBonus: activeGame ? activeGame.blueDefenseBonus : 0
+    property bool redInvincible: activeGame ? (activeGame.redBaseInvincible || false) : false
+    property bool blueInvincible: activeGame ? (activeGame.blueBaseInvincible || false) : false
+    readonly property bool hasBases: root.activeGame
+        ? Boolean(root.activeGame.hasBases) : true
+    readonly property bool showControlPoints: root.activeGame
+        ? Boolean(root.activeGame.hasControlPoints) : false
+    readonly property bool currentSeason: root.uiFirstMode || (root.activeGame
+        ? Boolean(root.activeGame.uses2027Protocol) : false)
+    readonly property var territory: root.activeGame ? root.activeGame.territoryStatus : ({})
 
     readonly property bool redOutpostDestroyed: redOutpostHP <= 0
     readonly property bool blueOutpostDestroyed: blueOutpostHP <= 0
@@ -99,8 +102,9 @@ Item {
         active: root.currentSeason
         sourceComponent: Tactical.PilotMatchHud {
             objectName: "pilotMatchHud"
-            game: root.gameDataContext
+            game: root.activeGame
             dashboard: root.tacticalSource?.dashboardData || ({})
+            snapshot: root.uiFirstSource?.snapshot || ({})
             redTeamName: root.redTeamName
             blueTeamName: root.blueTeamName
             compact: root.width < 1400
