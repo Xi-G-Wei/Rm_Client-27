@@ -2523,6 +2523,12 @@ void MainWindow::createCenterArea() {
         this,
         m_matchSourceController->sourceKind());
   }
+  if (m_qmlCentralAimingHUD &&
+      m_qmlCentralAimingHUD->rootObject() &&
+      m_matchUiProjection) {
+    m_qmlCentralAimingHUD->rootObject()->setProperty(
+        "matchUiSource", QVariant::fromValue(m_matchUiProjection));
+  }
   if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {
     if (m_matchUiProjection) {
       m_qmlTopInfoBar->rootObject()->setProperty(
@@ -5553,6 +5559,12 @@ bool MainWindow::handleKeyboardMouseControlKey(QKeyEvent *event,
 
 void MainWindow::handleKeyboardMouseButton(Qt::MouseButton button,
                                            bool pressed) {
+  if (button == Qt::LeftButton && m_mockMatchSource) {
+    const bool allowed =
+        pressed && !m_tacticalMode && !isKeyboardMouseControlBlocked();
+    m_mockMatchSource->setTriggerHeld(allowed);
+    return;
+  }
   if (!canUseKeyboardMouseControl()) {
     return;
   }
@@ -5745,6 +5757,8 @@ void MainWindow::resetKeyboardMouseControlState(bool sendNeutral) {
       m_pendingMouseY != 0 || m_pendingMouseZ != 0;
 
   m_keyboardMouseMask = 0;
+  if (m_mockMatchSource)
+    m_mockMatchSource->setTriggerHeld(false);
   m_pendingMouseX = 0;
   m_pendingMouseY = 0;
   m_pendingMouseZ = 0;

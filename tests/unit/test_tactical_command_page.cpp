@@ -687,6 +687,33 @@ private slots:
     QCOMPARE(panel->property("chassisStatus").toString(),
              QStringLiteral("小陀螺 · 97 W"));
   }
+
+  void testCentralAimingHudUsesMockHeat() {
+    RM::MockMatchSource source;
+    QVERIFY(source.loadFromFile(
+        QStringLiteral(":/mock/3v3/match_3v3_basic.json")));
+    RM::MatchUiProjection projection(source.matchSession());
+
+    QQmlEngine engine;
+    QQmlComponent component(
+        &engine, QUrl(QStringLiteral("qrc:/qml/CentralAimingHUD.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    const QVariantMap initialProperties{
+        {QStringLiteral("matchUiSource"), QVariant::fromValue(&projection)},
+    };
+    QScopedPointer<QObject> hud(
+        component.createWithInitialProperties(initialProperties));
+    QVERIFY2(hud, qPrintable(component.errorString()));
+    QTRY_VERIFY(hud->property("matchUiActive").toBool());
+    QTRY_COMPARE(hud->property("currentHeat").toReal(), 10.0);
+    QCOMPARE(hud->property("heatLimit").toReal(), 200.0);
+
+    QVERIFY(source.start());
+    QVERIFY(source.setTriggerHeld(true));
+    QVERIFY(source.advanceByMs(2000));
+    QTRY_VERIFY(hud->property("isOverheated").toBool());
+    QVERIFY(source.setTriggerHeld(false));
+  }
 };
 
 QTEST_MAIN(TestTacticalCommandPage)

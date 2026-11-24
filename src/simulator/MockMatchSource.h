@@ -62,6 +62,7 @@ public:
     Q_INVOKABLE bool togglePause();
     Q_INVOKABLE bool cycleScenario(int direction = 1);
     Q_INVOKABLE bool selectScenario(const QString &scenario);
+    Q_INVOKABLE bool setTriggerHeld(bool held);
 
     // 测试和回放接口：显式推进真实时间，不受系统定时器抖动影响。
     bool advanceByMs(qint64 elapsedMs);
@@ -79,6 +80,8 @@ private slots:
 
 private:
     bool applyActionsAtElapsedSecond(int elapsedSec);
+    bool applyLocalCombatStep(double virtualMs);
+    bool fireImmediateShot();
     void initializeScenarioSnapshot();
     void clearError();
     void reportError(const QString &message);
@@ -89,6 +92,9 @@ private:
     QTimer m_timer;
     QElapsedTimer m_wallClock;
     qint64 m_lastWallClockMs = 0;
+    bool m_triggerHeld = false;
+    double m_fireAccumulatorMs = 0.0;
+    double m_coolingAccumulatorMs = 0.0;
 };
 
 } // namespace RM

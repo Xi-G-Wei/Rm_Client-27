@@ -1148,6 +1148,9 @@ bool MockMatchSource::loadFromFile(const QString &path) {
 bool MockMatchSource::loadFromJson(const QByteArray &json,
                                    const QString &sourceName) {
     m_timer.stop();
+    m_triggerHeld = false;
+    m_fireAccumulatorMs = 0.0;
+    m_coolingAccumulatorMs = 0.0;
     auto parsed = std::make_unique<MockMatchSourcePrivate>();
     QString error;
     if (!parseScenario(json, parsed.get(), &error)) {
@@ -1212,6 +1215,9 @@ bool MockMatchSource::reset() {
         return false;
     }
     m_timer.stop();
+    m_triggerHeld = false;
+    m_fireAccumulatorMs = 0.0;
+    m_coolingAccumulatorMs = 0.0;
     d->running = false;
     d->paused = false;
     d->completed = false;
@@ -1290,6 +1296,22 @@ bool MockMatchSource::selectScenario(const QString &scenario) {
         start();
 }
 
+bool MockMatchSource::setTriggerHeld(bool held) {
+    if (!d->loaded || !d->running || d->completed) {
+        m_triggerHeld = false;
+        return false;
+    }
+    if (m_triggerHeld == held) {
+        return true;
+    }
+    m_triggerHeld = held;
+    m_fireAccumulatorMs = 0.0;
+    if (held) {
+        fireImmediateShot();
+    }
+    return true;
+}
+
 void MockMatchSource::setPlaybackRate(double rate) {
     const double bounded = std::clamp(rate, 0.25, 4.0);
     if (qFuzzyCompare(d->playbackRate, bounded)) {
@@ -1304,8 +1326,10 @@ bool MockMatchSource::advanceByMs(qint64 elapsedMs) {
         return false;
     }
 
-    d->virtualCarryMs +=
+    const double virtualDeltaMs =
         static_cast<double>(elapsedMs) * d->playbackRate;
+    applyLocalCombatStep(virtualDeltaMs);
+    d->virtualCarryMs += virtualDeltaMs;
     int fullSeconds =
         static_cast<int>(std::floor(d->virtualCarryMs / 1000.0));
     if (fullSeconds <= 0) {
@@ -1340,6 +1364,84 @@ bool MockMatchSource::advanceByMs(qint64 elapsedMs) {
             emit scenarioCompleted();
             break;
         }
+    }
+    return true;
+}
+
+bool MockMatchSource::fireImmediateShot() {
+    MatchSnapshot snapshot = m_session->matchSnapshot();
+    MatchRobotSnapshot *robot = nullptr;
+    for (MatchRobotSnapshot &candidate : snapshot.redTeam.robots) {
+        if (candidate.slot == 3) {
+            robot = &candidate;
+            break;
+        }
+    }
+    if (!robot || !robot->online || !robot->alive
+        || robot->ammo <= 0
+        || (robot->heat >= 0 && robot->heatLimit > 0
+            && robot->heat >= robot->heatLimit)) {
+        return false;
+    }
+    if (robot->ammo > 0)
+        --robot->ammo;
+    if (robot->heat >= 0)
+        robot->heat += 12;
+    snapshot.updatedAtMs = QDateTime::currentMSecsSinceEpoch();
+    QString error;
+    return m_session->replaceSnapshot(snapshot, &error);
+}
+
+bool MockMatchSource::applyLocalCombatStep(double virtualMs) {
+    if (!m_session || !m_session->isValid() || virtualMs <= 0.0)
+        return false;
+
+    MatchSnapshot snapshot = m_session->matchSnapshot();
+    MatchRobotSnapshot *robot = nullptr;
+    for (MatchRobotSnapshot &candidate : snapshot.redTeam.robots) {
+        if (candidate.slot == 3) {
+            robot = &candidate;
+            break;
+        }
+    }
+    if (!robot)
+        return false;
+
+    bool changed = false;
+    m_coolingAccumulatorMs += virtualMs;
+    while (m_coolingAccumulatorMs >= 100.0) {
+        m_coolingAccumulatorMs -= 100.0;
+        if (robot->heat > 0) {
+            --robot->heat;
+            changed = true;
+        }
+    }
+
+    if (m_triggerHeld) {
+        m_fireAccumulatorMs += virtualMs;
+        while (m_fireAccumulatorMs >= 100.0) {
+            m_fireAccumulatorMs -= 100.0;
+            if (!robot->online || !robot->alive || robot->ammo <= 0)
+                continue;
+            if (robot->heatLimit > 0 && robot->heat >= robot->heatLimit)
+                continue;
+            if (robot->ammo > 0)
+                --robot->ammo;
+            if (robot->heat >= 0)
+                robot->heat += 12;
+            changed = true;
+        }
+    } else {
+        m_fireAccumulatorMs = 0.0;
+    }
+
+    if (!changed)
+        return true;
+    snapshot.updatedAtMs = QDateTime::currentMSecsSinceEpoch();
+    QString error;
+    if (!m_session->replaceSnapshot(snapshot, &error)) {
+        reportError(error);
+        return false;
     }
     return true;
 }

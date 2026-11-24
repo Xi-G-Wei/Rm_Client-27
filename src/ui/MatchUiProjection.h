@@ -89,6 +89,7 @@ class MatchUiProjection : public QObject {
     Q_PROPERTY(QVariantList moduleData READ moduleData NOTIFY updated)
     Q_PROPERTY(QVariantMap buffTimedData READ buffTimedData NOTIFY updated)
     Q_PROPERTY(QVariantMap myRobot READ myRobot NOTIFY updated)
+    Q_PROPERTY(QVariantMap myRobotCustomData READ myRobotCustomData NOTIFY updated)
 
 public:
     explicit MatchUiProjection(MatchSession *session,
@@ -154,6 +155,7 @@ public:
     QVariantList moduleData() const;
     QVariantMap buffTimedData() const;
     QVariantMap myRobot() const;
+    QVariantMap myRobotCustomData() const;
 
 signals:
     void updated();

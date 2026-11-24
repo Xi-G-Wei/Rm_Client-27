@@ -623,10 +623,32 @@ QVariantMap MatchUiProjection::buffTimedData() const {
 
 QVariantMap MatchUiProjection::myRobot() const {
     const MatchRobotSnapshot robot = operatorRobot();
+    int robotType = 3;
+    if (robot.role == MatchRobotRole::Heavy)
+        robotType = 1;
+    else if (robot.role == MatchRobotRole::Engineer)
+        robotType = 2;
+    else if (robot.role == MatchRobotRole::Aerial)
+        robotType = 6;
     return {
+        {QStringLiteral("type"), robotType},
         {QStringLiteral("isClientConnected"), robot.online},
         {QStringLiteral("isOutOfCombat"), robot.online && robot.alive},
         {QStringLiteral("isRedTeam"), true},
+        {QStringLiteral("currentHeat"), qMax(0, robot.heat)},
+        {QStringLiteral("heatLimit"),
+         robot.heatLimit > 0 ? robot.heatLimit : 240},
+        {QStringLiteral("isHeatOverLimit"),
+         robot.heat >= 0 && robot.heatLimit > 0
+             && robot.heat >= robot.heatLimit},
+        {QStringLiteral("allowedAmmo17mm"),
+         robot.role == MatchRobotRole::Heavy ? 0 : qMax(0, robot.ammo)},
+        {QStringLiteral("allowedAmmo42mm"),
+         robot.role == MatchRobotRole::Heavy ? qMax(0, robot.ammo) : 0},
+        {QStringLiteral("muzzleVelocity"), 25.0},
+        {QStringLiteral("shootSpeedLimit"), 30.0},
+        {QStringLiteral("speedLockState"), 0},
+        {QStringLiteral("speedLockSeconds"), 0},
         {QStringLiteral("superCapEnergy"),
          robot.energy.superCapPercent},
         {QStringLiteral("chassisMode"),
@@ -635,6 +657,30 @@ QVariantMap MatchUiProjection::myRobot() const {
          matchChassisDriveTypeLabel(robot.chassis.driveType)},
         {QStringLiteral("wheelLegMode"),
          matchWheelLegModeLabel(robot.wheelLeg.mode)},
+    };
+}
+
+QVariantMap MatchUiProjection::myRobotCustomData() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    int chassisMode = 0;
+    switch (robot.chassis.mode) {
+    case MatchChassisMode::Follow: chassisMode = 1; break;
+    case MatchChassisMode::Spin: chassisMode = 2; break;
+    case MatchChassisMode::Protect: chassisMode = 3; break;
+    default: chassisMode = 0; break;
+    }
+    return {
+        {QStringLiteral("fricEnabled"), robot.online && robot.alive},
+        {QStringLiteral("rammerEnabled"), robot.online && robot.alive},
+        {QStringLiteral("chassisMode"), chassisMode},
+        {QStringLiteral("spinMode"), chassisMode == 2},
+        {QStringLiteral("followMode"), chassisMode == 1},
+        {QStringLiteral("chassisProtect"), chassisMode == 3},
+        {QStringLiteral("chassisWarning"), false},
+        {QStringLiteral("superCapEnergy"), robot.energy.superCapPercent},
+        {QStringLiteral("gimbalChassisAngle"), 0.0},
+        {QStringLiteral("targetDistance"), 0},
+        {QStringLiteral("ballisticCompensation"), 0},
     };
 }
 

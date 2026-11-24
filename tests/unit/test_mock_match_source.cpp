@@ -214,6 +214,30 @@ private slots:
         QVERIFY(!source.lastError().isEmpty());
     }
 
+    void triggerUpdatesHeatAndAmmoThenCools() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(
+            scenarioPath(QStringLiteral("match_3v3_basic.json"))));
+        QVERIFY(source.start());
+        const int initialAmmo =
+            findRobot(source.snapshot(), QStringLiteral("red-3"))
+                .value(QStringLiteral("ammo"))
+                .toInt();
+        QVERIFY(source.setTriggerHeld(true));
+        QVERIFY(source.advanceByMs(2000));
+        QVariantMap robot =
+            findRobot(source.snapshot(), QStringLiteral("red-3"));
+        QVERIFY(robot.value(QStringLiteral("heat")).toInt()
+                >= robot.value(QStringLiteral("heatLimit")).toInt());
+        QVERIFY(robot.value(QStringLiteral("ammo")).toInt() < initialAmmo);
+
+        QVERIFY(source.setTriggerHeld(false));
+        QVERIFY(source.advanceByMs(2000));
+        robot = findRobot(source.snapshot(), QStringLiteral("red-3"));
+        QVERIFY(robot.value(QStringLiteral("heat")).toInt()
+                < robot.value(QStringLiteral("heatLimit")).toInt());
+    }
+
     void resetRestoresInitialAndZeroClock() {
         RM::MockMatchSource source;
         QVERIFY(source.loadFromFile(

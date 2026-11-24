@@ -17,12 +17,17 @@ Item {
     // qmllint disable unqualified
     readonly property var gameDataContext: typeof gameData !== "undefined" ? gameData : null
     // qmllint enable unqualified
-    property var myRobot: gameDataContext ? gameDataContext.myRobot : ({})
+    property var matchUiSource: null
+    readonly property bool matchUiActive: Boolean(matchUiSource?.active)
+    readonly property var activeDataSource: matchUiActive
+        ? matchUiSource : gameDataContext
+    property var myRobot: activeDataSource ? activeDataSource.myRobot : ({})
     property int robotType: (myRobot && myRobot.type !== undefined) ? Number(myRobot.type) : 3
     property bool isAerialRobot: robotType === 6 || robotType === 4
 
     // --- 自定义 UI 数据绑定 ---
-    property var customData: gameDataContext ? gameDataContext.myRobotCustomData : ({})
+    property var customData: activeDataSource
+        ? activeDataSource.myRobotCustomData : ({})
     property bool showCustomStatusPanels: false
 
     property real currentHeat: (myRobot && myRobot.currentHeat !== undefined) ? Number(myRobot.currentHeat) : 0
