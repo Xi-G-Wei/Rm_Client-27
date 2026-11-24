@@ -155,6 +155,7 @@ Item {
 
         Rectangle {
             id: center
+            objectName: "commandDashboardCenter"
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 0
@@ -235,7 +236,11 @@ Item {
                 objectName: "commandBattlefieldReport"
                 x: 5
                 width: parent.width - 10
-                y: root.bases ? darts.y + darts.height + center.briefGap : center.mapHeight + center.briefGap
+                y: root.bases
+                    ? darts.y + darts.height + center.briefGap
+                    : root.cameraPriority
+                        ? center.mapHeight + center.briefGap
+                        : map.y + map.renderedMapBottom + center.briefGap
                 height: Math.max(0, parent.height - y - 5)
                 color: "#94111c27"
                 border.color: "#59667684"

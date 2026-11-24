@@ -7,6 +7,7 @@
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <QQuickView>
 #include <QtTest>
 
 class TacticalMainWindowStub : public QObject {
@@ -498,6 +499,54 @@ private slots:
     QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("2"));
   }
 
+  void testBattlefieldReportTouchesRenderedMapEdge() {
+    RM::MockMatchSource source;
+    QVERIFY(source.loadFromFile(
+        QStringLiteral(":/mock/3v3/match_3v3_basic.json")));
+    RM::MatchUiProjection projection(source.matchSession());
+
+    QQuickView view;
+    view.rootContext()->setContextProperty(QStringLiteral("mockMatchSource"),
+                                           &source);
+    view.rootContext()->setContextProperty(QStringLiteral("mockUiSource"),
+                                           &projection);
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.resize(1920, 1080);
+    view.setSource(
+        QUrl(QStringLiteral("qrc:/qml/Tactical/TacticalCommandPage.qml")));
+    QVERIFY2(view.status() == QQuickView::Ready,
+             view.errors().isEmpty()
+                 ? ""
+                 : qPrintable(view.errors().first().toString()));
+    view.show();
+    QQuickItem *page = view.rootObject();
+    QVERIFY(page);
+    QTRY_VERIFY(page->property("commandDashboardActive").toBool());
+
+    auto *mapItem = qobject_cast<QQuickItem *>(
+        page->findChild<QObject *>(QStringLiteral("commandDashboardMap")));
+    auto *mapArea = qobject_cast<QQuickItem *>(
+        mapItem
+            ? mapItem->findChild<QObject *>(
+                  QStringLiteral("tacticalRadarMapArea"))
+            : nullptr);
+    auto *battlefieldReport = qobject_cast<QQuickItem *>(
+        page->findChild<QObject *>(QStringLiteral("commandBattlefieldReport")));
+    QVERIFY(mapArea);
+    QVERIFY(mapItem);
+    QVERIFY(battlefieldReport);
+    QTRY_VERIFY(mapArea->width() > 0 && mapArea->height() > 0);
+    QTRY_VERIFY(battlefieldReport->width() > 0
+                && battlefieldReport->height() > 0);
+
+    const QRectF mapAreaRect = mapArea->mapRectToItem(
+        page, QRectF(0, 0, mapArea->width(), mapArea->height()));
+    const QRectF reportRect = battlefieldReport->mapRectToItem(
+        page,
+        QRectF(0, 0, battlefieldReport->width(), battlefieldReport->height()));
+    QVERIFY(reportRect.top() - mapAreaRect.bottom() <= 8.0);
+  }
+
   void testTopInfoBarUsesMockMatchSource() {
     RM::MockMatchSource source;
     QVERIFY(source.loadFromFile(
@@ -554,6 +603,7 @@ private slots:
     QVERIFY(source.advanceByMs(8000));
     QVERIFY(source.pause());
     QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("1"));
+
   }
 };
 

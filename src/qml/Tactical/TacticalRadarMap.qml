@@ -42,6 +42,7 @@ Rectangle {
     readonly property real headerHeight: (root.compactHeader ? 30 : 38) * root.visualScale
     readonly property real footerHeight: (root.compactHeader ? 0 : root.largeView || root.currentSeason ? 26 : 8) * root.visualScale
     readonly property real sideInset: (root.compactHeader ? 5 : 10) * root.visualScale
+    readonly property real renderedMapBottom: mapArea.y + mapArea.height
 
     onAllyIsBlueChanged: {
         fallbackGrid.requestPaint()
@@ -359,6 +360,7 @@ Rectangle {
 
     Rectangle {
         id: mapArea
+        objectName: "tacticalRadarMapArea"
         readonly property real availableWidth: Math.max(0, root.width - 2 * root.sideInset)
         readonly property real availableHeight: Math.max(0, root.height - root.headerHeight - root.footerHeight)
         width: root.currentSeason ? Math.min(availableWidth, availableHeight * root.fieldAspect)
