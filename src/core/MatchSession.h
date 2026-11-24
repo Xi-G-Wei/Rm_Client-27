@@ -32,14 +32,88 @@ enum class MatchRobotRole {
     Unknown,
 };
 
+enum class MatchChassisMode {
+    Unknown,
+    Normal,
+    Follow,
+    Spin,
+    Protect,
+};
+
+enum class MatchChassisDriveType {
+    Unknown,
+    Wheel,
+    WheelLeg,
+};
+
+enum class MatchWheelLegMode {
+    Unknown,
+    Wheel,
+    Leg,
+    Transition,
+    Balance,
+};
+
 QString matchPhaseKey(MatchPhase phase);
 QString matchPhaseLabel(MatchPhase phase);
 QString matchSideKey(MatchSide side);
 QString matchRobotRoleKey(MatchRobotRole role);
 QString matchRobotRoleLabel(MatchRobotRole role);
+QString matchChassisModeKey(MatchChassisMode mode);
+QString matchChassisModeLabel(MatchChassisMode mode);
+QString matchChassisDriveTypeKey(MatchChassisDriveType type);
+QString matchChassisDriveTypeLabel(MatchChassisDriveType type);
+QString matchWheelLegModeKey(MatchWheelLegMode mode);
+QString matchWheelLegModeLabel(MatchWheelLegMode mode);
 
 // -1 表示未知值，不能直接当成 0 显示给操作手。
 constexpr int kUnknownMatchMetric = -1;
+constexpr double kUnknownMatchReal = -1.0;
+
+// 功率统一使用 W，能量统一使用 J，超级电容使用 0-100%。
+// 字段拆分后，界面不再需要猜测 chassisPower 是功率还是能量。
+struct MatchEnergySnapshot {
+    double superCapPercent = kUnknownMatchReal;
+    double bufferEnergyJ = kUnknownMatchReal;
+    double bufferEnergyLimitJ = kUnknownMatchReal;
+    double chassisEnergyJ = kUnknownMatchReal;
+    double chassisEnergyLimitJ = kUnknownMatchReal;
+    double chassisPowerW = kUnknownMatchReal;
+    double chassisPowerLimitW = kUnknownMatchReal;
+
+    QVariantMap toVariantMap() const;
+};
+
+struct MatchChassisSnapshot {
+    MatchChassisMode mode = MatchChassisMode::Unknown;
+    MatchChassisDriveType driveType = MatchChassisDriveType::Unknown;
+    bool enabled = false;
+    bool enabledReported = false;
+    int overpowerLockRemainingSec = kUnknownMatchMetric;
+
+    QVariantMap toVariantMap() const;
+};
+
+struct MatchWheelLegJointSnapshot {
+    QString name;
+    double angleDegrees = kUnknownMatchReal;
+    double targetAngleDegrees = kUnknownMatchReal;
+
+    QVariantMap toVariantMap() const;
+};
+
+struct MatchWheelLegSnapshot {
+    bool telemetryAvailable = false;
+    MatchWheelLegMode mode = MatchWheelLegMode::Unknown;
+    double stanceHeightMm = kUnknownMatchReal;
+    double pitchDegrees = kUnknownMatchReal;
+    double rollDegrees = kUnknownMatchReal;
+    double leftWheelSpeedMps = kUnknownMatchReal;
+    double rightWheelSpeedMps = kUnknownMatchReal;
+    QList<MatchWheelLegJointSnapshot> joints;
+
+    QVariantMap toVariantMap() const;
+};
 
 struct MatchRobotSnapshot {
     QString id;
@@ -51,7 +125,9 @@ struct MatchRobotSnapshot {
     int ammo = kUnknownMatchMetric;
     int heat = kUnknownMatchMetric;
     int heatLimit = kUnknownMatchMetric;
-    int chassisPower = kUnknownMatchMetric;
+    MatchEnergySnapshot energy;
+    MatchChassisSnapshot chassis;
+    MatchWheelLegSnapshot wheelLeg;
     bool online = false;
     bool alive = false;
     int respawnRemainingSec = kUnknownMatchMetric;

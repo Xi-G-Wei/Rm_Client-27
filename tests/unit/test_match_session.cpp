@@ -19,7 +19,29 @@ RM::MatchRobotSnapshot makeRobot(RM::MatchSide side,
     robot.ammo = 100;
     robot.heat = 20;
     robot.heatLimit = 200;
-    robot.chassisPower = 60;
+    robot.energy.superCapPercent = 73.5;
+    robot.energy.bufferEnergyJ = 42.0;
+    robot.energy.bufferEnergyLimitJ = 60.0;
+    robot.energy.chassisEnergyJ = 80.0;
+    robot.energy.chassisEnergyLimitJ = 120.0;
+    robot.energy.chassisPowerW = 55.0;
+    robot.energy.chassisPowerLimitW = 100.0;
+    robot.chassis.mode = RM::MatchChassisMode::Follow;
+    robot.chassis.driveType = RM::MatchChassisDriveType::WheelLeg;
+    robot.chassis.enabled = true;
+    robot.chassis.enabledReported = true;
+    robot.chassis.overpowerLockRemainingSec = 0;
+    robot.wheelLeg.telemetryAvailable = true;
+    robot.wheelLeg.mode = RM::MatchWheelLegMode::Balance;
+    robot.wheelLeg.stanceHeightMm = 240.0;
+    robot.wheelLeg.pitchDegrees = 3.5;
+    robot.wheelLeg.rollDegrees = -1.2;
+    robot.wheelLeg.leftWheelSpeedMps = 1.4;
+    robot.wheelLeg.rightWheelSpeedMps = 1.35;
+    robot.wheelLeg.joints = {
+        {QStringLiteral("left_hip"), 12.0, 15.0},
+        {QStringLiteral("right_hip"), -10.0, -8.0},
+    };
     robot.online = true;
     robot.alive = true;
     robot.respawnRemainingSec = 0;
@@ -113,6 +135,32 @@ private slots:
         QCOMPARE(firstRobot.value(QStringLiteral("roleLabel")).toString(),
                  QStringLiteral("重装"));
         QVERIFY(firstRobot.contains(QStringLiteral("position")));
+        QVERIFY(!firstRobot.contains(QStringLiteral("chassisPower")));
+
+        const QVariantMap energy =
+            firstRobot.value(QStringLiteral("energy")).toMap();
+        QCOMPARE(energy.value(QStringLiteral("superCapPercent")).toDouble(),
+                 73.5);
+        QCOMPARE(energy.value(QStringLiteral("bufferEnergyJ")).toDouble(),
+                 42.0);
+        QCOMPARE(energy.value(QStringLiteral("chassisPowerW")).toDouble(),
+                 55.0);
+        QCOMPARE(energy.value(QStringLiteral("chassisPowerLimitW")).toDouble(),
+                 100.0);
+
+        const QVariantMap chassis =
+            firstRobot.value(QStringLiteral("chassis")).toMap();
+        QCOMPARE(chassis.value(QStringLiteral("mode")).toString(),
+                 QStringLiteral("follow"));
+        QCOMPARE(chassis.value(QStringLiteral("driveType")).toString(),
+                 QStringLiteral("wheel_leg"));
+
+        const QVariantMap wheelLeg =
+            firstRobot.value(QStringLiteral("wheelLeg")).toMap();
+        QVERIFY(wheelLeg.value(QStringLiteral("telemetryAvailable")).toBool());
+        QCOMPARE(wheelLeg.value(QStringLiteral("mode")).toString(),
+                 QStringLiteral("balance"));
+        QCOMPARE(wheelLeg.value(QStringLiteral("joints")).toList().size(), 2);
     }
 
     void threeRobotsPerTeamAreRequired() {
@@ -165,7 +213,9 @@ private slots:
         robot.ammo = RM::kUnknownMatchMetric;
         robot.heat = RM::kUnknownMatchMetric;
         robot.heatLimit = RM::kUnknownMatchMetric;
-        robot.chassisPower = RM::kUnknownMatchMetric;
+        robot.energy = {};
+        robot.chassis = {};
+        robot.wheelLeg = {};
 
         const QList<RM::MatchValidationIssue> issues =
             RM::validateMatchSnapshot(snapshot);
@@ -178,6 +228,56 @@ private slots:
         const QVariantMap robotMap = robots.first().toMap();
         QCOMPARE(robotMap.value(QStringLiteral("health")).toInt(), -1);
         QCOMPARE(robotMap.value(QStringLiteral("ammo")).toInt(), -1);
+        const QVariantMap energy =
+            robotMap.value(QStringLiteral("energy")).toMap();
+        QCOMPARE(energy.value(QStringLiteral("superCapPercent")).toDouble(),
+                 RM::kUnknownMatchReal);
+        QCOMPARE(energy.value(QStringLiteral("chassisPowerW")).toDouble(),
+                 RM::kUnknownMatchReal);
+        const QVariantMap chassis =
+            robotMap.value(QStringLiteral("chassis")).toMap();
+        QCOMPARE(chassis.value(QStringLiteral("mode")).toString(),
+                 QStringLiteral("unknown"));
+        const QVariantMap wheelLeg =
+            robotMap.value(QStringLiteral("wheelLeg")).toMap();
+        QVERIFY(!wheelLeg.value(QStringLiteral("telemetryAvailable")).toBool());
+    }
+
+    void energyValuesUseExplicitUnitsAndLimits() {
+        RM::MatchSnapshot snapshot = makeValidSnapshot();
+        snapshot.redTeam.robots[0].energy.superCapPercent = 101.0;
+        snapshot.redTeam.robots[1].energy.bufferEnergyJ = 61.0;
+        snapshot.redTeam.robots[2].energy.chassisEnergyJ = 121.0;
+
+        const QList<RM::MatchValidationIssue> issues =
+            RM::validateMatchSnapshot(snapshot);
+
+        QVERIFY(hasErrorAt(issues,
+                           QStringLiteral("energy.superCapPercent")));
+        QVERIFY(hasErrorAt(issues,
+                           QStringLiteral("energy.bufferEnergyJ")));
+        QVERIFY(hasErrorAt(issues,
+                           QStringLiteral("energy.chassisEnergyJ")));
+    }
+
+    void wheelLegJointsRequireTelemetryAndUniqueNames() {
+        RM::MatchSnapshot snapshot = makeValidSnapshot();
+        RM::MatchWheelLegSnapshot &wheelLeg =
+            snapshot.redTeam.robots[0].wheelLeg;
+        wheelLeg.telemetryAvailable = false;
+        wheelLeg.joints.append(
+            {QStringLiteral("left_hip"), 501.0, 0.0});
+        wheelLeg.joints[1].name = QStringLiteral("LEFT_HIP");
+
+        const QList<RM::MatchValidationIssue> issues =
+            RM::validateMatchSnapshot(snapshot);
+
+        QVERIFY(hasErrorAt(issues,
+                           QStringLiteral("wheelLeg.telemetryAvailable")));
+        QVERIFY(hasErrorAt(issues,
+                           QStringLiteral("wheelLeg.joints[2].name")));
+        QVERIFY(hasErrorAt(issues,
+                           QStringLiteral("wheelLeg.joints[2].angleDegrees")));
     }
 
     void invalidReplacementDoesNotOverwriteValidSnapshot() {

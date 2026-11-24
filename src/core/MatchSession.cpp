@@ -32,6 +32,191 @@ void validateMetric(QList<MatchValidationIssue> *issues,
     }
 }
 
+void validateRealMetric(QList<MatchValidationIssue> *issues,
+                        const QString &path,
+                        double value,
+                        bool allowZero,
+                        double maximum = -1.0) {
+    if (value == kUnknownMatchReal) {
+        return;
+    }
+    if (!std::isfinite(value) || value < 0.0 ||
+        (!allowZero && value == 0.0) ||
+        (maximum >= 0.0 && value > maximum)) {
+        QString message = allowZero ? QStringLiteral("不能小于 -1")
+                                    : QStringLiteral("必须是正数或 -1");
+        if (maximum >= 0.0) {
+            message += QStringLiteral("，且不能大于 %1").arg(maximum);
+        }
+        addIssue(issues,
+                 MatchValidationSeverity::Error,
+                 path,
+                 message);
+    }
+}
+
+void validateSignedRealMetric(QList<MatchValidationIssue> *issues,
+                              const QString &path,
+                              double value,
+                              double minimum,
+                              double maximum) {
+    if (value == kUnknownMatchReal) {
+        return;
+    }
+    if (!std::isfinite(value) || value < minimum || value > maximum) {
+        addIssue(issues,
+                 MatchValidationSeverity::Error,
+                 path,
+                 QStringLiteral("必须是 %1 到 %2 之间的有限数值或 -1")
+                     .arg(minimum)
+                     .arg(maximum));
+    }
+}
+
+void validateEnergy(QList<MatchValidationIssue> *issues,
+                    const MatchEnergySnapshot &energy,
+                    const QString &robotPath) {
+    const QString path = robotPath + QStringLiteral(".energy.");
+    validateRealMetric(issues,
+                       path + QStringLiteral("superCapPercent"),
+                       energy.superCapPercent,
+                       true,
+                       100.0);
+    validateRealMetric(issues,
+                       path + QStringLiteral("bufferEnergyJ"),
+                       energy.bufferEnergyJ,
+                       true);
+    validateRealMetric(issues,
+                       path + QStringLiteral("bufferEnergyLimitJ"),
+                       energy.bufferEnergyLimitJ,
+                       false);
+    validateRealMetric(issues,
+                       path + QStringLiteral("chassisEnergyJ"),
+                       energy.chassisEnergyJ,
+                       true);
+    validateRealMetric(issues,
+                       path + QStringLiteral("chassisEnergyLimitJ"),
+                       energy.chassisEnergyLimitJ,
+                       false);
+    validateRealMetric(issues,
+                       path + QStringLiteral("chassisPowerW"),
+                       energy.chassisPowerW,
+                       true);
+    validateRealMetric(issues,
+                       path + QStringLiteral("chassisPowerLimitW"),
+                       energy.chassisPowerLimitW,
+                       false);
+
+    if (energy.bufferEnergyJ >= 0.0 &&
+        energy.bufferEnergyLimitJ > 0.0 &&
+        energy.bufferEnergyJ > energy.bufferEnergyLimitJ) {
+        addIssue(issues,
+                 MatchValidationSeverity::Error,
+                 path + QStringLiteral("bufferEnergyJ"),
+                 QStringLiteral("缓冲能量不能大于缓冲能量上限"));
+    }
+    if (energy.chassisEnergyJ >= 0.0 &&
+        energy.chassisEnergyLimitJ > 0.0 &&
+        energy.chassisEnergyJ > energy.chassisEnergyLimitJ) {
+        addIssue(issues,
+                 MatchValidationSeverity::Error,
+                 path + QStringLiteral("chassisEnergyJ"),
+                 QStringLiteral("底盘能量不能大于底盘能量上限"));
+    }
+}
+
+void validateChassis(QList<MatchValidationIssue> *issues,
+                     const MatchChassisSnapshot &chassis,
+                     const QString &robotPath) {
+    const QString path = robotPath + QStringLiteral(".chassis.");
+    if (chassis.overpowerLockRemainingSec < kUnknownMatchMetric) {
+        addIssue(issues,
+                 MatchValidationSeverity::Error,
+                 path + QStringLiteral("overpowerLockRemainingSec"),
+                 QStringLiteral("超功率断电时间不能小于 -1"));
+    }
+}
+
+void validateWheelLeg(QList<MatchValidationIssue> *issues,
+                      const MatchWheelLegSnapshot &wheelLeg,
+                      const QString &robotPath) {
+    const QString path = robotPath + QStringLiteral(".wheelLeg.");
+    validateRealMetric(issues,
+                       path + QStringLiteral("stanceHeightMm"),
+                       wheelLeg.stanceHeightMm,
+                       false);
+    validateSignedRealMetric(issues,
+                             path + QStringLiteral("pitchDegrees"),
+                             wheelLeg.pitchDegrees,
+                             -180.0,
+                             180.0);
+    validateSignedRealMetric(issues,
+                             path + QStringLiteral("rollDegrees"),
+                             wheelLeg.rollDegrees,
+                             -180.0,
+                             180.0);
+
+    const auto validateWheelSpeed = [&](const QString &name, double value) {
+        if (value == kUnknownMatchReal) {
+            return;
+        }
+        if (!std::isfinite(value)) {
+            addIssue(issues,
+                     MatchValidationSeverity::Error,
+                     path + name,
+                     QStringLiteral("轮速必须是有限数值或 -1"));
+        }
+    };
+    validateWheelSpeed(QStringLiteral("leftWheelSpeedMps"),
+                       wheelLeg.leftWheelSpeedMps);
+    validateWheelSpeed(QStringLiteral("rightWheelSpeedMps"),
+                       wheelLeg.rightWheelSpeedMps);
+
+    if (!wheelLeg.joints.isEmpty() && !wheelLeg.telemetryAvailable) {
+        addIssue(issues,
+                 MatchValidationSeverity::Error,
+                 path + QStringLiteral("telemetryAvailable"),
+                 QStringLiteral("存在关节数据时必须标记轮腿遥测可用"));
+    }
+
+    QSet<QString> jointNames;
+    for (int index = 0; index < wheelLeg.joints.size(); ++index) {
+        const MatchWheelLegJointSnapshot &joint =
+            wheelLeg.joints.at(index);
+        const QString jointPath =
+            path + QStringLiteral("joints[%1].").arg(index);
+        const QString normalizedName = joint.name.trimmed().toLower();
+        if (normalizedName.isEmpty()) {
+            addIssue(issues,
+                     MatchValidationSeverity::Error,
+                     jointPath + QStringLiteral("name"),
+                     QStringLiteral("轮腿关节名称不能为空"));
+        } else if (jointNames.contains(normalizedName)) {
+            addIssue(issues,
+                     MatchValidationSeverity::Error,
+                     jointPath + QStringLiteral("name"),
+                     QStringLiteral("轮腿关节名称不能重复"));
+        }
+        jointNames.insert(normalizedName);
+
+        const auto validateAngle = [&](const QString &field, double value) {
+            if (value == kUnknownMatchReal) {
+                return;
+            }
+            if (!std::isfinite(value) || value < -180.0 || value > 180.0) {
+                addIssue(issues,
+                         MatchValidationSeverity::Error,
+                         jointPath + field,
+                         QStringLiteral("关节角度必须是 -180 到 180 度或 -1"));
+            }
+        };
+        validateAngle(QStringLiteral("angleDegrees"),
+                      joint.angleDegrees);
+        validateAngle(QStringLiteral("targetAngleDegrees"),
+                      joint.targetAngleDegrees);
+    }
+}
+
 void validateRobot(QList<MatchValidationIssue> *issues,
                    const MatchRobotSnapshot &robot,
                    MatchSide expectedSide,
@@ -78,10 +263,9 @@ void validateRobot(QList<MatchValidationIssue> *issues,
                    path + QStringLiteral(".heatLimit"),
                    robot.heatLimit,
                    false);
-    validateMetric(issues,
-                   path + QStringLiteral(".chassisPower"),
-                   robot.chassisPower,
-                   true);
+    validateEnergy(issues, robot.energy, path);
+    validateChassis(issues, robot.chassis, path);
+    validateWheelLeg(issues, robot.wheelLeg, path);
 
     if (robot.health >= 0 && robot.maxHealth > 0 &&
         robot.health > robot.maxHealth) {
@@ -205,6 +389,121 @@ QString matchRobotRoleLabel(MatchRobotRole role) {
     return QStringLiteral("未知");
 }
 
+QString matchChassisModeKey(MatchChassisMode mode) {
+    switch (mode) {
+    case MatchChassisMode::Unknown: return QStringLiteral("unknown");
+    case MatchChassisMode::Normal: return QStringLiteral("normal");
+    case MatchChassisMode::Follow: return QStringLiteral("follow");
+    case MatchChassisMode::Spin: return QStringLiteral("spin");
+    case MatchChassisMode::Protect: return QStringLiteral("protect");
+    }
+    return QStringLiteral("unknown");
+}
+
+QString matchChassisModeLabel(MatchChassisMode mode) {
+    switch (mode) {
+    case MatchChassisMode::Unknown: return QStringLiteral("未知");
+    case MatchChassisMode::Normal: return QStringLiteral("普通");
+    case MatchChassisMode::Follow: return QStringLiteral("跟随");
+    case MatchChassisMode::Spin: return QStringLiteral("小陀螺");
+    case MatchChassisMode::Protect: return QStringLiteral("保护");
+    }
+    return QStringLiteral("未知");
+}
+
+QString matchChassisDriveTypeKey(MatchChassisDriveType type) {
+    switch (type) {
+    case MatchChassisDriveType::Unknown: return QStringLiteral("unknown");
+    case MatchChassisDriveType::Wheel: return QStringLiteral("wheel");
+    case MatchChassisDriveType::WheelLeg: return QStringLiteral("wheel_leg");
+    }
+    return QStringLiteral("unknown");
+}
+
+QString matchChassisDriveTypeLabel(MatchChassisDriveType type) {
+    switch (type) {
+    case MatchChassisDriveType::Unknown: return QStringLiteral("未知");
+    case MatchChassisDriveType::Wheel: return QStringLiteral("轮式");
+    case MatchChassisDriveType::WheelLeg: return QStringLiteral("轮腿");
+    }
+    return QStringLiteral("未知");
+}
+
+QString matchWheelLegModeKey(MatchWheelLegMode mode) {
+    switch (mode) {
+    case MatchWheelLegMode::Unknown: return QStringLiteral("unknown");
+    case MatchWheelLegMode::Wheel: return QStringLiteral("wheel");
+    case MatchWheelLegMode::Leg: return QStringLiteral("leg");
+    case MatchWheelLegMode::Transition: return QStringLiteral("transition");
+    case MatchWheelLegMode::Balance: return QStringLiteral("balance");
+    }
+    return QStringLiteral("unknown");
+}
+
+QString matchWheelLegModeLabel(MatchWheelLegMode mode) {
+    switch (mode) {
+    case MatchWheelLegMode::Unknown: return QStringLiteral("未知");
+    case MatchWheelLegMode::Wheel: return QStringLiteral("轮式");
+    case MatchWheelLegMode::Leg: return QStringLiteral("腿式");
+    case MatchWheelLegMode::Transition: return QStringLiteral("切换中");
+    case MatchWheelLegMode::Balance: return QStringLiteral("平衡");
+    }
+    return QStringLiteral("未知");
+}
+
+QVariantMap MatchEnergySnapshot::toVariantMap() const {
+    return {
+        {QStringLiteral("superCapPercent"), superCapPercent},
+        {QStringLiteral("bufferEnergyJ"), bufferEnergyJ},
+        {QStringLiteral("bufferEnergyLimitJ"), bufferEnergyLimitJ},
+        {QStringLiteral("chassisEnergyJ"), chassisEnergyJ},
+        {QStringLiteral("chassisEnergyLimitJ"), chassisEnergyLimitJ},
+        {QStringLiteral("chassisPowerW"), chassisPowerW},
+        {QStringLiteral("chassisPowerLimitW"), chassisPowerLimitW},
+    };
+}
+
+QVariantMap MatchChassisSnapshot::toVariantMap() const {
+    return {
+        {QStringLiteral("mode"), matchChassisModeKey(mode)},
+        {QStringLiteral("modeLabel"), matchChassisModeLabel(mode)},
+        {QStringLiteral("driveType"), matchChassisDriveTypeKey(driveType)},
+        {QStringLiteral("driveTypeLabel"),
+         matchChassisDriveTypeLabel(driveType)},
+        {QStringLiteral("enabled"), enabled},
+        {QStringLiteral("enabledReported"), enabledReported},
+        {QStringLiteral("overpowerLockRemainingSec"),
+         overpowerLockRemainingSec},
+    };
+}
+
+QVariantMap MatchWheelLegJointSnapshot::toVariantMap() const {
+    return {
+        {QStringLiteral("name"), name},
+        {QStringLiteral("angleDegrees"), angleDegrees},
+        {QStringLiteral("targetAngleDegrees"), targetAngleDegrees},
+    };
+}
+
+QVariantMap MatchWheelLegSnapshot::toVariantMap() const {
+    QVariantList jointMaps;
+    jointMaps.reserve(joints.size());
+    for (const MatchWheelLegJointSnapshot &joint : joints) {
+        jointMaps.append(joint.toVariantMap());
+    }
+    return {
+        {QStringLiteral("telemetryAvailable"), telemetryAvailable},
+        {QStringLiteral("mode"), matchWheelLegModeKey(mode)},
+        {QStringLiteral("modeLabel"), matchWheelLegModeLabel(mode)},
+        {QStringLiteral("stanceHeightMm"), stanceHeightMm},
+        {QStringLiteral("pitchDegrees"), pitchDegrees},
+        {QStringLiteral("rollDegrees"), rollDegrees},
+        {QStringLiteral("leftWheelSpeedMps"), leftWheelSpeedMps},
+        {QStringLiteral("rightWheelSpeedMps"), rightWheelSpeedMps},
+        {QStringLiteral("joints"), jointMaps},
+    };
+}
+
 QVariantMap MatchRobotSnapshot::toVariantMap() const {
     QVariantMap map{
         {QStringLiteral("id"), id},
@@ -217,7 +516,9 @@ QVariantMap MatchRobotSnapshot::toVariantMap() const {
         {QStringLiteral("ammo"), ammo},
         {QStringLiteral("heat"), heat},
         {QStringLiteral("heatLimit"), heatLimit},
-        {QStringLiteral("chassisPower"), chassisPower},
+        {QStringLiteral("energy"), energy.toVariantMap()},
+        {QStringLiteral("chassis"), chassis.toVariantMap()},
+        {QStringLiteral("wheelLeg"), wheelLeg.toVariantMap()},
         {QStringLiteral("online"), online},
         {QStringLiteral("alive"), alive},
         {QStringLiteral("respawnRemainingSec"), respawnRemainingSec},
