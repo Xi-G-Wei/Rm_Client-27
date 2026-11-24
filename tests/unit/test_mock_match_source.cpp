@@ -203,6 +203,17 @@ private slots:
         QVERIFY(source.isRunning());
     }
 
+    void selectScenarioLoadsSupportedScene() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(
+            scenarioPath(QStringLiteral("match_3v3_basic.json"))));
+        QVERIFY(source.selectScenario(QStringLiteral("match_3v3_offline")));
+        QCOMPARE(source.scenarioId(), QStringLiteral("match_3v3_offline"));
+        QVERIFY(source.isRunning());
+        QVERIFY(!source.selectScenario(QStringLiteral("missing_scene")));
+        QVERIFY(!source.lastError().isEmpty());
+    }
+
     void resetRestoresInitialAndZeroClock() {
         RM::MockMatchSource source;
         QVERIFY(source.loadFromFile(

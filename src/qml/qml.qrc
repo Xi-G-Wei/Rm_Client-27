@@ -41,6 +41,7 @@
         <file>CustomUI/SuperCapacitorBar.qml</file>
         <file>CustomUI/GimbalAngleIndicator.qml</file>
         <file>Tactical/TacticalCommandPage.qml</file>
+        <file>Tactical/MockScenarioPanel.qml</file>
         <file>Tactical/CommandDashboard.qml</file>
         <file>Tactical/DashboardBackdrop.qml</file>
         <file>Tactical/DashboardGlyph.qml</file>

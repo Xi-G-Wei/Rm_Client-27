@@ -48,14 +48,15 @@ public:
     bool loadFromFile(const QString &path);
     bool loadFromJson(const QByteArray &json,
                       const QString &sourceName = QString());
-    bool start();
-    bool pause();
-    bool resume();
-    bool reset();
-    bool restart();
-    void setPlaybackRate(double rate);
+    Q_INVOKABLE bool start();
+    Q_INVOKABLE bool pause();
+    Q_INVOKABLE bool resume();
+    Q_INVOKABLE bool reset();
+    Q_INVOKABLE bool restart();
+    Q_INVOKABLE void setPlaybackRate(double rate);
     Q_INVOKABLE bool togglePause();
     Q_INVOKABLE bool cycleScenario(int direction = 1);
+    Q_INVOKABLE bool selectScenario(const QString &scenario);
 
     // 测试和回放接口：显式推进真实时间，不受系统定时器抖动影响。
     bool advanceByMs(qint64 elapsedMs);

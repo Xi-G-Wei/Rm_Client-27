@@ -139,6 +139,15 @@ Rectangle {
         onTriggered: root.sampleHeroCameraFps()
     }
 
+    MockScenarioPanel {
+        objectName: "mockScenarioPanel"
+        source: root.mockSourceContext
+        visible: root.uiFirstMode
+        x: Math.max(8, root.width - width - 12)
+        y: root.designSurfaceTop + 8
+        z: 1000
+    }
+
     function selectRobot(robotId, isEnemy) {
         if (isEnemy) {
             root.selectedEnemyId = robotId

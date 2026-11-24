@@ -460,6 +460,10 @@ private slots:
 
     QTRY_VERIFY(page->property("uiFirstMode").toBool());
     QTRY_VERIFY(page->property("commandDashboardActive").toBool());
+    QObject *scenarioPanel =
+        page->findChild<QObject *>(QStringLiteral("mockScenarioPanel"));
+    QVERIFY(scenarioPanel);
+    QTRY_VERIFY(scenarioPanel->property("visible").toBool());
     QObject *clock =
         page->findChild<QObject *>(QStringLiteral("dashboardMatchClock"));
     QObject *redScore =

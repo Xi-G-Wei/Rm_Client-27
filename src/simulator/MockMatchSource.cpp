@@ -1246,6 +1246,26 @@ bool MockMatchSource::cycleScenario(int direction) {
     return loadFromFile(path) && start();
 }
 
+bool MockMatchSource::selectScenario(const QString &scenario) {
+    static const QStringList supported{
+        QStringLiteral("match_3v3_basic"),
+        QStringLiteral("match_3v3_damage"),
+        QStringLiteral("match_3v3_offline"),
+        QStringLiteral("match_3v3_settlement"),
+    };
+    QString id = QFileInfo(scenario).completeBaseName();
+    if (id.isEmpty()) {
+        id = scenario;
+    }
+    if (!supported.contains(id)) {
+        reportError(QStringLiteral("未知模拟场景：%1").arg(scenario));
+        return false;
+    }
+    return loadFromFile(
+               QStringLiteral(":/mock/3v3/%1.json").arg(id)) &&
+        start();
+}
+
 void MockMatchSource::setPlaybackRate(double rate) {
     const double bounded = std::clamp(rate, 0.25, 4.0);
     if (qFuzzyCompare(d->playbackRate, bounded)) {
