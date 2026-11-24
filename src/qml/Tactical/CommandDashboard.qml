@@ -46,6 +46,36 @@ Item {
         return root.dashboard.economyReported ? Format.number(value) : "—"
     }
 
+    function cardWithSelection(robot, blue) {
+        var card = {}
+        for (var key in robot)
+            card[key] = robot[key]
+        const id = String(card.id || "")
+        card.selected = id.length > 0
+            && (id === String(root.pageRoot.selectedRobotId || "")
+                || id === String(root.pageRoot.selectedEnemyId || ""))
+        card.blue = Boolean(blue)
+        return card
+    }
+
+    readonly property var selectedCard: {
+        const allyId = String(root.pageRoot.selectedRobotId || "")
+        const enemyId = String(root.pageRoot.selectedEnemyId || "")
+        const targetId = allyId.length > 0 ? allyId : enemyId
+        if (targetId.length === 0)
+            return ({})
+        for (const robot of (root.dashboard.redRobots || [])) {
+            if (String(robot.id || "") === targetId)
+                return root.cardWithSelection(robot, false)
+        }
+        for (const robot of (root.dashboard.blueRobots || [])) {
+            if (String(robot.id || "") === targetId)
+                return root.cardWithSelection(robot, true)
+        }
+        return ({})
+    }
+    readonly property bool hasSelectedCard: Object.keys(root.selectedCard).length > 0
+
     DashboardBackdrop {
         anchors.fill: parent
         redSurface: root.redSurface
@@ -64,6 +94,79 @@ Item {
         redTeamName: root.pageRoot.redTeamName
         blueTeamName: root.pageRoot.blueTeamName
         compact: root.compact
+    }
+
+    Rectangle {
+        id: selectedRobotPanel
+        objectName: "commandSelectedRobotPanel"
+        visible: root.hasSelectedCard
+        anchors.right: parent.right
+        anchors.rightMargin: root.blueRosterWidth + root.margin + 8
+        anchors.top: header.bottom
+        anchors.topMargin: 8
+        width: 286
+        height: 126
+        radius: 3
+        color: "#ed14232d"
+        border.width: 1
+        border.color: root.selectedCard.blue ? root.blueAccent : root.redAccent
+        z: 30
+
+        Column {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 5
+            Text {
+                text: (root.selectedCard.blue ? "蓝方 " : "红方 ")
+                    + (root.selectedCard.name || root.selectedCard.id || "已选机器人")
+                color: root.selectedCard.blue ? root.blueAccent : root.redAccent
+                font.pixelSize: 15
+                font.bold: true
+            }
+            Text {
+                text: "血量 "
+                    + (root.selectedCard.hp ?? "—") + " / "
+                    + (root.selectedCard.maxHp ?? "—")
+                    + "    超电 "
+                    + (root.selectedCard.energy?.superCapPercent >= 0
+                        ? Math.round(root.selectedCard.energy.superCapPercent) + "%" : "—")
+                color: "#e8f1f6"
+                font.pixelSize: 12
+            }
+            Text {
+                text: "功率 "
+                    + (root.selectedCard.energy?.chassisPowerW >= 0
+                        ? Math.round(root.selectedCard.energy.chassisPowerW) + " W" : "—")
+                    + "    模式 "
+                    + (root.selectedCard.chassis?.modeLabel || "—")
+                color: "#bcd0dc"
+                font.pixelSize: 11
+            }
+            Text {
+                text: "驱动 "
+                    + (root.selectedCard.chassis?.driveTypeLabel || "—")
+                    + (root.selectedCard.wheelLeg?.telemetryAvailable
+                        ? " · " + (root.selectedCard.wheelLeg?.modeLabel || "未知") : "")
+                color: "#a8c8d7"
+                font.pixelSize: 11
+            }
+            Text {
+                text: !root.selectedCard.online ? "数据中断"
+                    : root.selectedCard.hp === 0 ? "战亡/等待复活"
+                    : root.selectedCard.energy?.superCapPercent < 20 ? "低超电告警"
+                    : root.selectedCard.energy?.chassisPowerW
+                        > root.selectedCard.energy?.chassisPowerLimitW ? "超功率告警"
+                    : "状态正常"
+                color: !root.selectedCard.online ? "#aab3b8"
+                    : root.selectedCard.hp === 0 ? "#ff9b8e"
+                    : root.selectedCard.energy?.superCapPercent < 20 ? "#ffd08d"
+                    : root.selectedCard.energy?.chassisPowerW
+                        > root.selectedCard.energy?.chassisPowerLimitW ? "#ff8b80"
+                    : "#8fe2ae"
+                font.pixelSize: 11
+                font.bold: true
+            }
+        }
     }
 
     Rectangle {
@@ -534,7 +637,8 @@ Item {
                     height: slots.cardHeight
                     DashboardRobotCard {
                         anchors.fill: parent
-                        robot: roster.robots[slot.index] ?? ({})
+                        robot: root.cardWithSelection(
+                            roster.robots[slot.index] ?? ({}), roster.blue)
                         blue: roster.blue
                         sideSurface: roster.surface
                     }

@@ -35,22 +35,26 @@ Rectangle {
 
             SimButton {
                 label: "基础"
-                active: root.source.scenarioId === "match_3v3_basic"
+                active: root.active
+                    && root.source.scenarioId === "match_3v3_basic"
                 onTriggered: root.source.selectScenario("match_3v3_basic")
             }
             SimButton {
                 label: "受伤"
-                active: root.source.scenarioId === "match_3v3_damage"
+                active: root.active
+                    && root.source.scenarioId === "match_3v3_damage"
                 onTriggered: root.source.selectScenario("match_3v3_damage")
             }
             SimButton {
                 label: "离线"
-                active: root.source.scenarioId === "match_3v3_offline"
+                active: root.active
+                    && root.source.scenarioId === "match_3v3_offline"
                 onTriggered: root.source.selectScenario("match_3v3_offline")
             }
             SimButton {
                 label: "结算"
-                active: root.source.scenarioId === "match_3v3_settlement"
+                active: root.active
+                    && root.source.scenarioId === "match_3v3_settlement"
                 onTriggered: root.source.selectScenario("match_3v3_settlement")
             }
         }
@@ -64,8 +68,8 @@ Rectangle {
 
         SimButton {
             anchors.verticalCenter: parent.verticalCenter
-            label: root.source.paused ? "继续" : "暂停"
-            active: root.source.paused
+            label: root.active && root.source.paused ? "继续" : "暂停"
+            active: root.active && root.source.paused
             onTriggered: root.source.togglePause()
         }
         SimButton {
@@ -87,19 +91,22 @@ Rectangle {
         SimButton {
             anchors.verticalCenter: parent.verticalCenter
             label: "0.5×"
-            active: Math.abs(root.source.playbackRate - 0.5) < 0.01
+            active: root.active
+                && Math.abs(root.source.playbackRate - 0.5) < 0.01
             onTriggered: root.source.setPlaybackRate(0.5)
         }
         SimButton {
             anchors.verticalCenter: parent.verticalCenter
             label: "1×"
-            active: Math.abs(root.source.playbackRate - 1.0) < 0.01
+            active: root.active
+                && Math.abs(root.source.playbackRate - 1.0) < 0.01
             onTriggered: root.source.setPlaybackRate(1.0)
         }
         SimButton {
             anchors.verticalCenter: parent.verticalCenter
             label: "2×"
-            active: Math.abs(root.source.playbackRate - 2.0) < 0.01
+            active: root.active
+                && Math.abs(root.source.playbackRate - 2.0) < 0.01
             onTriggered: root.source.setPlaybackRate(2.0)
         }
     }

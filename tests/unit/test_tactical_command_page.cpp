@@ -505,6 +505,16 @@ private slots:
         page->findChild<QObject *>(QStringLiteral("mockSettlementBanner"));
     QVERIFY(settlementBanner);
     QTRY_VERIFY(settlementBanner->property("visible").toBool());
+
+    QVERIFY(QMetaObject::invokeMethod(
+        page, "selectRobot", Q_ARG(QVariant, QVariant("red-3")),
+        Q_ARG(QVariant, false)));
+    QObject *selectedPanel =
+        page->findChild<QObject *>(QStringLiteral("commandSelectedRobotPanel"));
+    QVERIFY(selectedPanel);
+    QTRY_VERIFY(selectedPanel->property("visible").toBool());
+    QVERIFY(QMetaObject::invokeMethod(page, "clearSelection"));
+    QTRY_VERIFY(!selectedPanel->property("visible").toBool());
   }
 
   void testBattlefieldReportTouchesRenderedMapEdge() {

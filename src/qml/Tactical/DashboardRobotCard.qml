@@ -18,7 +18,8 @@ Rectangle {
     readonly property DashboardHeavyEffects heavyMotion: heavyEffect.item as DashboardHeavyEffects
     readonly property bool heavyHero: Boolean(heavyMotion?.hero)
     readonly property real heavyHeroMix: heavyMotion?.heroMix || 0
-    objectName: isHeavy ? (blue ? "blueHeavyCard" : "redHeavyCard") : ""
+    objectName: isHeavy ? (blue ? "blueHeavyCard" : "redHeavyCard")
+        : "dashboardRobotCard"
     readonly property bool reviving: robot.respawnLeft !== undefined
     readonly property bool invincible: robot.invincibleLeft > 0
     readonly property color fillColor: invincible ? "#ffd580" : reviving ? "#8fe2ae" : accent
