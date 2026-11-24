@@ -311,6 +311,8 @@ set(SOURCES
     src/widgets/OperationsPanel.cpp
     src/simulator/ProtocolSimulator.cpp
     src/simulator/MockMatchSource.cpp
+    src/simulator/MatchRecorder.cpp
+    src/simulator/MatchReplaySource.cpp
     src/network/Protocol.cpp
     src/network/NetworkManager.cpp
     src/network/VideoReceiver.cpp
@@ -335,6 +337,7 @@ set(SOURCES
     src/core/MatchSession.cpp
     src/core/MatchSourceController.cpp
     src/core/MatchDataHealth.cpp
+    src/core/MatchSnapshotJson.cpp
     src/core/LogFileNaming.cpp
     src/core/TimedEventRules.cpp
     src/core/PopupStateMachine.cpp
@@ -375,6 +378,8 @@ set(HEADERS
     src/widgets/DebugLogWidget.h
     src/simulator/ProtocolSimulator.h
     src/simulator/MockMatchSource.h
+    src/simulator/MatchRecorder.h
+    src/simulator/MatchReplaySource.h
     src/network/Protocol.h
     src/network/NetworkManager.h
     src/network/CRC.h
@@ -388,6 +393,7 @@ set(HEADERS
     src/core/MatchDataSource.h
     src/core/MatchSourceController.h
     src/core/MatchDataHealth.h
+    src/core/MatchSnapshotJson.h
     src/core/LogFileNaming.h
     src/core/TimedEventRules.h
     src/core/PopupTypes.h

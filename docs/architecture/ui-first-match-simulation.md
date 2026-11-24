@@ -111,6 +111,27 @@ RM_UI_FIRST_SCENARIO=match_3v3_offline \
 3v3 指挥页右上区域同时显示可视化模拟控制条，可直接选择基础、受伤、离线、
 结算场景，并控制暂停、重置和 0.5/1/2 倍速。该控制条不会出现在正式模式。
 
+## 录制与回放
+
+录制只保存归一化后的 `MatchSnapshot` JSONL，不保存 MQTT 原始包、账号、现场地址
+或运行配置：
+
+```bash
+RM_UI_FIRST_MOCK=1 \
+RM_UI_FIRST_RECORD=/tmp/match.jsonl \
+./build/dev/RoboMasterClient2025
+```
+
+回放通过 `MatchReplaySource` 实现，并使用与模拟器、未来真实协议相同的
+`MatchDataSource` 接口：
+
+```bash
+RM_UI_FIRST_REPLAY=/tmp/match.jsonl \
+./build/dev/RoboMasterClient2025
+```
+
+回放恢复比赛时间、阶段、比分、机器人状态、事件、数据权限和健康度所需字段。
+
 ## 当前 UI 映射
 
 `MatchUiProjection` 将动态快照投影成现有指挥页字段：

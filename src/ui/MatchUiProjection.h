@@ -15,6 +15,8 @@ class MatchUiProjection : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY updated)
     Q_PROPERTY(bool mockMode READ mockMode CONSTANT)
+    Q_PROPERTY(bool replayMode READ replayMode CONSTANT)
+    Q_PROPERTY(QString sourceKind READ sourceKind CONSTANT)
     Q_PROPERTY(QVariantMap snapshot READ snapshot NOTIFY updated)
     Q_PROPERTY(QVariantMap dashboardData READ dashboardData NOTIFY updated)
     Q_PROPERTY(QVariantMap headerData READ headerData NOTIFY updated)
@@ -87,10 +89,13 @@ class MatchUiProjection : public QObject {
 
 public:
     explicit MatchUiProjection(MatchSession *session,
-                               QObject *parent = nullptr);
+                               QObject *parent = nullptr,
+                               const QString &sourceKind = QStringLiteral("mock"));
 
     bool active() const;
     bool mockMode() const;
+    bool replayMode() const;
+    QString sourceKind() const;
     QVariantMap snapshot() const;
     QVariantMap dashboardData() const;
     QVariantMap headerData() const;
@@ -151,6 +156,7 @@ private:
     MatchRobotSnapshot operatorRobot() const;
 
     MatchSession *m_session = nullptr;
+    QString m_sourceKind = QStringLiteral("mock");
 };
 
 } // namespace RM

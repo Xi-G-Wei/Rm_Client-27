@@ -57,6 +57,7 @@
 #include "../core/MatchSourceController.h"
 #include "../core/ThreatRanker.h"
 #include "../simulator/MockMatchSource.h"
+#include "../simulator/MatchRecorder.h"
 #include "MatchUiProjection.h"
 #include "../devhooks/ClientDevHooks.h"
 #include "../network/MqttClient.h"
@@ -2448,8 +2449,21 @@ void MainWindow::createCenterArea() {
   if (!m_matchSourceController) {
     m_matchSourceController = new RM::MatchSourceController(this);
   }
-  if (qEnvironmentVariableIsSet("RM_UI_FIRST_MOCK") &&
-      !m_mockMatchSource) {
+  const QString replayPath =
+      qEnvironmentVariable("RM_UI_FIRST_REPLAY");
+  if (!replayPath.trimmed().isEmpty() && !m_matchUiProjection) {
+    if (m_matchSourceController->selectReplay(replayPath)) {
+      m_matchUiProjection = new RM::MatchUiProjection(
+          m_matchSourceController->matchSession(),
+          this,
+          m_matchSourceController->sourceKind());
+      qInfo() << "UI-first replay loaded:" << replayPath;
+    } else {
+      qWarning() << "UI-first replay load failed:" << replayPath;
+      m_matchSourceController->selectReal();
+    }
+  } else if (qEnvironmentVariableIsSet("RM_UI_FIRST_MOCK") &&
+             !m_mockMatchSource) {
     QString scenarioPath = qEnvironmentVariable("RM_UI_FIRST_SCENARIO");
     if (scenarioPath.trimmed().isEmpty()) {
       scenarioPath =
@@ -2478,12 +2492,29 @@ void MainWindow::createCenterArea() {
               []() { qInfo() << "UI-first mock scenario completed"; });
       m_matchUiProjection =
           new RM::MatchUiProjection(
-              m_mockMatchSource->matchSession(), this);
+              m_mockMatchSource->matchSession(),
+              this,
+              m_matchSourceController->sourceKind());
+      const QString recordingPath =
+          qEnvironmentVariable("RM_UI_FIRST_RECORD");
+      if (!recordingPath.trimmed().isEmpty()) {
+        m_matchRecorder = new RM::MatchRecorder(this);
+        connect(m_matchRecorder,
+                &RM::MatchRecorder::errorOccurred,
+                this,
+                [](const QString &message) {
+                  qWarning() << "UI-first recording:" << message;
+                });
+        if (m_matchRecorder->start(
+                m_mockMatchSource->matchSession(), recordingPath)) {
+          qInfo() << "UI-first recording started:" << recordingPath;
+        }
+      }
       qInfo() << "UI-first mock loaded:" << scenarioPath;
     } else {
       qWarning() << "UI-first mock load failed:" << scenarioPath;
     }
-  } else if (!m_mockMatchSource) {
+  } else if (!m_mockMatchSource && !m_matchUiProjection) {
     m_matchSourceController->selectReal();
   }
   if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {

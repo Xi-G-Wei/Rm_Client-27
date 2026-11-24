@@ -3,6 +3,7 @@
 #include "core/MatchDataSource.h"
 #include "core/MatchSession.h"
 #include "simulator/MockMatchSource.h"
+#include "simulator/MatchReplaySource.h"
 
 namespace RM {
 namespace {
@@ -57,6 +58,18 @@ bool MatchSourceController::selectMock(const QString &scenarioPath) {
 
 bool MatchSourceController::selectReal() {
     auto *candidate = new UnavailableMatchSource(this);
+    m_mockSource = nullptr;
+    replaceSource(candidate);
+    return true;
+}
+
+bool MatchSourceController::selectReplay(const QString &recordingPath) {
+    auto *candidate = new MatchReplaySource(this);
+    if (!candidate->loadFromFile(recordingPath)) {
+        candidate->deleteLater();
+        return false;
+    }
+    candidate->start();
     m_mockSource = nullptr;
     replaceSource(candidate);
     return true;

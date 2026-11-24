@@ -568,15 +568,16 @@ Item {
             KeyTip { keyText: "Ctrl+Y"; label: "地图 / 工业相机" }
             KeyTip { keyText: "Ctrl+T"; label: "切换操作界面" }
             KeyTip {
-                visible: root.pageRoot.uiFirstMode
+                visible: root.pageRoot.mockControlsActive
                 keyText: "F5"
                 label: root.pageRoot.mockPaused ? "继续模拟" : "暂停模拟"
             }
-            KeyTip { visible: root.pageRoot.uiFirstMode; keyText: "F6"; label: "重置模拟" }
-            KeyTip { visible: root.pageRoot.uiFirstMode; keyText: "F7"; label: "切换场景" }
+            KeyTip { visible: root.pageRoot.mockControlsActive; keyText: "F6"; label: "重置模拟" }
+            KeyTip { visible: root.pageRoot.mockControlsActive; keyText: "F7"; label: "切换场景" }
             Item { Layout.fillWidth: true }
             Text {
-                text: root.dashboard.mockMode
+                text: root.dashboard.replayMode ? "比赛回放运行中"
+                    : root.dashboard.mockMode
                     ? (root.dashboard.leadText || "本地模拟") + " · 运行中"
                     : root.dashboard.statusFresh ? "裁判数据更新中" : "等待裁判数据"
                 color: root.dashboard.statusFresh ? "#a6dfc8" : "#e3bc83"

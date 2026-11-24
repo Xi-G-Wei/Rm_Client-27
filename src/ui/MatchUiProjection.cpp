@@ -162,8 +162,12 @@ QString eventPriority(const QString &type) {
 
 } // namespace
 
-MatchUiProjection::MatchUiProjection(MatchSession *session, QObject *parent)
-    : QObject(parent), m_session(session) {
+MatchUiProjection::MatchUiProjection(MatchSession *session,
+                                     QObject *parent,
+                                     const QString &sourceKind)
+    : QObject(parent),
+      m_session(session),
+      m_sourceKind(sourceKind.isEmpty() ? QStringLiteral("mock") : sourceKind) {
     if (m_session) {
         connect(m_session,
                 &MatchSession::snapshotChanged,
@@ -177,7 +181,15 @@ bool MatchUiProjection::active() const {
 }
 
 bool MatchUiProjection::mockMode() const {
-    return true;
+    return m_sourceKind == QStringLiteral("mock");
+}
+
+bool MatchUiProjection::replayMode() const {
+    return m_sourceKind == QStringLiteral("replay");
+}
+
+QString MatchUiProjection::sourceKind() const {
+    return m_sourceKind;
 }
 
 QVariantMap MatchUiProjection::snapshot() const {
@@ -208,7 +220,8 @@ QVariantMap MatchUiProjection::dashboardData() const {
         {QStringLiteral("leadReason"),
          QStringLiteral("%1 : %2").arg(redScore).arg(blueScore)},
         {QStringLiteral("statusFresh"), true},
-        {QStringLiteral("mockMode"), true},
+        {QStringLiteral("mockMode"), mockMode()},
+        {QStringLiteral("replayMode"), replayMode()},
         {QStringLiteral("economyReported"), false},
         {QStringLiteral("redDarts"), QVariantList{}},
         {QStringLiteral("blueDarts"), QVariantList{}},

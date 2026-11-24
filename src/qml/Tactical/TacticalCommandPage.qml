@@ -22,6 +22,8 @@ Rectangle {
     readonly property var mainWindowContext: typeof mainWindow !== "undefined" ? mainWindow : null
     // qmllint enable unqualified
     readonly property bool uiFirstMode: Boolean(root.matchUiContext?.active)
+    readonly property bool mockControlsActive: root.uiFirstMode
+        && Boolean(root.mockSourceContext)
     readonly property bool mockPaused: Boolean(root.mockSourceContext?.paused)
     readonly property var tacticalGameContext: root.uiFirstMode
         ? root.matchUiContext : root.gameDataContext
@@ -142,7 +144,7 @@ Rectangle {
     MockScenarioPanel {
         objectName: "mockScenarioPanel"
         source: root.mockSourceContext
-        visible: root.uiFirstMode
+        visible: root.mockControlsActive
         x: Math.max(8, root.width - Math.round(root.width * 0.1815)
             - width - 48)
         y: Math.max(8, Math.round(root.height * 0.012))

@@ -20,6 +20,7 @@ public:
     explicit MatchSourceController(QObject *parent = nullptr);
 
     bool selectMock(const QString &scenarioPath = QString());
+    bool selectReplay(const QString &recordingPath);
     bool selectReal();
 
     MatchDataSource *currentSource() const;
