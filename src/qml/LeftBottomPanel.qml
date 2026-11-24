@@ -20,21 +20,25 @@ Item {
     // gameData 由 MainWindow 注入，面板内统一从这个入口读取机器人状态。
     // qmllint disable unqualified
     readonly property var gameDataContext: typeof gameData !== "undefined" ? gameData : null
-    readonly property bool commandStyle: Boolean(gameDataContext?.uses2027Protocol)
+    readonly property var mockUiSourceContext: typeof mockUiSource !== "undefined" ? mockUiSource : null
     // qmllint enable unqualified
+    readonly property bool uiFirstMode: Boolean(root.mockUiSourceContext?.active)
+    readonly property var activeGameData: root.uiFirstMode ? root.mockUiSourceContext : root.gameDataContext
+    readonly property bool commandStyle: Boolean(activeGameData?.uses2027Protocol)
 
     // === 数据属性（绑定 gameData 上下文） ===
-    property int currentHP: gameDataContext ? gameDataContext.currentHealth : 1 //当前血量
-    property int maxHP: gameDataContext ? gameDataContext.maxHealth : 500 //最大血量值
-    property int chassisEnergy: gameDataContext ? gameDataContext.chassisEnergy : 60 //底盘输出能量
-    property int maxChassisEnergy: gameDataContext ? gameDataContext.maxChassisEnergy : 120 // 使用最大能量作为参考
-    property int bufferEnergy: gameDataContext ? gameDataContext.bufferEnergy : 250 //缓冲能量条
-    property int maxBufferEnergy: gameDataContext && gameDataContext.maxBufferEnergy !== undefined ? Number(gameDataContext.maxBufferEnergy) : 250
+    property int currentHP: activeGameData ? activeGameData.currentHealth : 1 //当前血量
+    property int maxHP: activeGameData ? activeGameData.maxHealth : 500 //最大血量值
+    property int chassisEnergy: activeGameData ? activeGameData.chassisEnergy : 60 //底盘输出能量
+    property int maxChassisEnergy: activeGameData ? activeGameData.maxChassisEnergy : 120 // 使用最大能量作为参考
+    property int bufferEnergy: activeGameData ? activeGameData.bufferEnergy : 250 //缓冲能量条
+    property int maxBufferEnergy: activeGameData && activeGameData.maxBufferEnergy !== undefined ? Number(activeGameData.maxBufferEnergy) : 250
+    property real superCapEnergy: activeGameData && activeGameData.superCapEnergy !== undefined ? Number(activeGameData.superCapEnergy) : -1
 
     // 机器人信息
-    property int robotLevel: gameDataContext ? gameDataContext.robotLevel : 2
-    property int maxlevel: gameDataContext && gameDataContext.maxlevel !== undefined ? Number(gameDataContext.maxlevel) : 10
-    property int robotId: gameDataContext ? gameDataContext.robotId : 2
+    property int robotLevel: activeGameData ? activeGameData.robotLevel : 2
+    property int maxlevel: activeGameData && activeGameData.maxlevel !== undefined ? Number(activeGameData.maxlevel) : 10
+    property int robotId: activeGameData ? activeGameData.robotId : 2
     property int displayRobotId: robotId % 100
     property string robotType:{
         switch(displayRobotId){
@@ -48,16 +52,16 @@ Item {
             return "infantry";
         }
     }
-    property int currentExp: gameDataContext ? gameDataContext.currentExp : 90
-    property int maxExp: gameDataContext ? gameDataContext.maxExp : 100
+    property int currentExp: activeGameData ? activeGameData.currentExp : 90
+    property int maxExp: activeGameData ? activeGameData.maxExp : 100
     property bool isRed: (robotId < 100)
     property bool isAerialRobot: displayRobotId === 6
-    property int yellowCardCount: gameDataContext ? gameDataContext.yellowCardCount : 0
-    property string outOfCombatStatus: gameDataContext ? gameDataContext.outOfCombatStatus : "已脱战"
+    property int yellowCardCount: activeGameData ? activeGameData.yellowCardCount : 0
+    property string outOfCombatStatus: activeGameData ? activeGameData.outOfCombatStatus : "已脱战"
 
-    property string chassisStatus: gameDataContext && gameDataContext.chassisStatus !== "" ? gameDataContext.chassisStatus : ""
+    property string chassisStatus: activeGameData && activeGameData.chassisStatus !== "" ? activeGameData.chassisStatus : ""
     property bool chassisOverPowerCut: chassisStatus.indexOf("超限断电") === 0 //超限断电提示
-    property bool isOutOfCombat: gameDataContext ? gameDataContext.isOutOfCombat : true
+    property bool isOutOfCombat: activeGameData ? activeGameData.isOutOfCombat : true
     readonly property real statsLeftMargin: root.isAerialRobot ? root.width * -0.03 : root.width * -0.10
     readonly property real statsVerticalOffset: root.isAerialRobot ? root.height * 0.02 : root.height * 0.08
     readonly property real hpBarTopMargin: root.isAerialRobot ? root.height * 0.11 : root.height * 0.18
@@ -100,7 +104,7 @@ Item {
     function emptyBuffData(typeId) {
         return ({ type: typeId, level: 0, maxTime: 0, leftTime: 0 })
     }
-    property var buffTimedData: gameDataContext ? gameDataContext.buffTimedData : ({})
+    property var buffTimedData: activeGameData ? activeGameData.buffTimedData : ({})
     property var attackBuff: buffTimedData.attack ? buffTimedData.attack : emptyBuffData(1)
     property var defenceBuff: buffTimedData.defense ? buffTimedData.defense : emptyBuffData(2)
     property var vulnerabilityBuff: buffTimedData.vulnerability ? buffTimedData.vulnerability : emptyBuffData(2)
@@ -239,7 +243,7 @@ Item {
     }
 
     // 模块状态
-    property var moduleStates: gameDataContext ? gameDataContext.moduleStates : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    property var moduleStates: activeGameData ? activeGameData.moduleStates : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
     property string teamPrefix: isRed ? "red" : "blue"
     property int safeRobotLevel: Math.max(1, Math.min(maxlevel, Math.round(Number(robotLevel) || 1)))
@@ -255,7 +259,7 @@ Item {
         anchors.rightMargin: 12
         anchors.topMargin: 8
         anchors.bottomMargin: 12
-        sourceComponent: Tactical.PilotRobotCard { game: root.gameDataContext }
+        sourceComponent: Tactical.PilotRobotCard { game: root.activeGameData }
     }
 
     // =============================================
@@ -660,7 +664,7 @@ Item {
                 // 底盘能量条 (青色)
                 Item {
                     id: bufferBar2
-                    visible: !root.gameDataContext || !root.gameDataContext.uses2027Protocol
+                    visible: !root.activeGameData || !root.activeGameData.uses2027Protocol
                     anchors.left: parent.left
                     anchors.top: bufferBar.bottom
                     anchors.topMargin: root.height * 0.02

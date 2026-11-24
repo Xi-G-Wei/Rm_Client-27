@@ -8,10 +8,10 @@
 
 namespace {
 
-QString scenarioPath() {
+QString scenarioPath(const QString &fileName =
+                         QStringLiteral("match_3v3_basic.json")) {
     return QDir(QStringLiteral(RM_SOURCE_DIR))
-        .absoluteFilePath(
-            QStringLiteral("mock/3v3/match_3v3_basic.json"));
+        .absoluteFilePath(QStringLiteral("mock/3v3/") + fileName);
 }
 
 QVariantMap firstRobot(const QVariantMap &dashboard,
@@ -97,6 +97,48 @@ private slots:
         QCOMPARE(map.value(QStringLiteral("enemyRobots")).toList().size(), 3);
         QCOMPARE(map.value(QStringLiteral("mapImageSource")).toString(),
                  QStringLiteral("qrc:/images/rmul3v3.png"));
+    }
+
+    void operatorVehicleFieldsFollowSelectedRobot() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(
+            scenarioPath(QStringLiteral("match_3v3_basic.json"))));
+        RM::MatchUiProjection projection(source.matchSession());
+
+        QCOMPARE(projection.robotId(), 3);
+        QCOMPARE(projection.currentHealth(), 400);
+        QCOMPARE(projection.maxHealth(), 400);
+        QCOMPARE(projection.bufferEnergy(), 40);
+        QCOMPARE(projection.maxBufferEnergy(), 60);
+        QCOMPARE(projection.superCapEnergy(), 74.0);
+        QCOMPARE(projection.chassisStatus(), QStringLiteral("普通 · 55 W"));
+        QCOMPARE(projection.moduleStates().size(), 10);
+        QCOMPARE(projection.moduleData().size(), 10);
+        QVERIFY(projection.myRobot()
+                    .value(QStringLiteral("isClientConnected"))
+                    .toBool());
+
+        QVERIFY(source.start());
+        QVERIFY(source.advanceByMs(40000));
+        QCOMPARE(projection.superCapEnergy(), 25.0);
+        QCOMPARE(projection.chassisStatus(), QStringLiteral("小陀螺 · 97 W"));
+    }
+
+    void offlineScenarioMarksOperatorVehicleDisconnected() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(
+            scenarioPath(QStringLiteral("match_3v3_offline.json"))));
+        RM::MatchUiProjection projection(source.matchSession());
+        QVERIFY(source.start());
+        QVERIFY(source.advanceByMs(5000));
+
+        QCOMPARE(projection.outOfCombatStatus(),
+                 QStringLiteral("数据中断"));
+        QVERIFY(!projection.isOutOfCombat());
+        QVERIFY(!projection.myRobot()
+                     .value(QStringLiteral("isClientConnected"))
+                     .toBool());
+        QCOMPARE(projection.moduleStates().first().toInt(), 2);
     }
 };
 

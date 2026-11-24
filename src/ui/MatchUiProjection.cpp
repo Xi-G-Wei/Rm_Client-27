@@ -3,6 +3,7 @@
 #include "core/MatchSession.h"
 
 #include <QDateTime>
+#include <QStringList>
 
 namespace RM {
 namespace {
@@ -419,6 +420,147 @@ int MatchUiProjection::zeroInt() const {
 
 bool MatchUiProjection::falseValue() const {
     return false;
+}
+
+MatchRobotSnapshot MatchUiProjection::operatorRobot() const {
+    if (!m_session) {
+        return {};
+    }
+    const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    for (const MatchRobotSnapshot &robot : snapshot.redTeam.robots) {
+        if (robot.slot == 3) {
+            return robot;
+        }
+    }
+    return snapshot.redTeam.robots.isEmpty()
+        ? MatchRobotSnapshot{}
+        : snapshot.redTeam.robots.first();
+}
+
+int MatchUiProjection::currentHealth() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    return robot.health >= 0 ? robot.health : 0;
+}
+
+int MatchUiProjection::maxHealth() const {
+    return qMax(0, operatorRobot().maxHealth);
+}
+
+int MatchUiProjection::chassisEnergy() const {
+    return qMax(0, qRound(operatorRobot().energy.chassisEnergyJ));
+}
+
+int MatchUiProjection::maxChassisEnergy() const {
+    return qMax(0, qRound(operatorRobot().energy.chassisEnergyLimitJ));
+}
+
+int MatchUiProjection::bufferEnergy() const {
+    return qMax(0, qRound(operatorRobot().energy.bufferEnergyJ));
+}
+
+int MatchUiProjection::maxBufferEnergy() const {
+    return qMax(0, qRound(operatorRobot().energy.bufferEnergyLimitJ));
+}
+
+double MatchUiProjection::superCapEnergy() const {
+    return operatorRobot().energy.superCapPercent;
+}
+
+int MatchUiProjection::robotLevel() const {
+    return 1;
+}
+
+int MatchUiProjection::maxlevel() const {
+    return 1;
+}
+
+int MatchUiProjection::robotId() const {
+    return operatorRobot().slot;
+}
+
+int MatchUiProjection::currentExp() const {
+    return 0;
+}
+
+int MatchUiProjection::maxExp() const {
+    return 100;
+}
+
+int MatchUiProjection::yellowCardCount() const {
+    return 0;
+}
+
+QString MatchUiProjection::outOfCombatStatus() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    if (!robot.online) {
+        return QStringLiteral("数据中断");
+    }
+    return robot.alive ? QStringLiteral("已脱战")
+                       : QStringLiteral("等待复活");
+}
+
+QString MatchUiProjection::chassisStatus() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    if (robot.chassis.overpowerLockRemainingSec > 0) {
+        return QStringLiteral("超限断电 %1s")
+            .arg(robot.chassis.overpowerLockRemainingSec);
+    }
+    QStringList parts;
+    if (robot.chassis.mode != MatchChassisMode::Unknown) {
+        parts.append(matchChassisModeLabel(robot.chassis.mode));
+    }
+    if (robot.energy.chassisPowerW >= 0.0) {
+        parts.append(
+            QStringLiteral("%1 W").arg(qRound(robot.energy.chassisPowerW)));
+    }
+    return parts.join(QStringLiteral(" · "));
+}
+
+bool MatchUiProjection::isOutOfCombat() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    return robot.online && robot.alive;
+}
+
+QVariantList MatchUiProjection::moduleStates() const {
+    const int state = operatorRobot().online ? 0 : 2;
+    QVariantList states;
+    for (int index = 0; index < 10; ++index) {
+        states.append(state);
+    }
+    return states;
+}
+
+QVariantList MatchUiProjection::moduleData() const {
+    const bool online = operatorRobot().online;
+    QVariantList modules;
+    for (int index = 0; index < 10; ++index) {
+        modules.append(QVariantMap{
+            {QStringLiteral("online"), online},
+            {QStringLiteral("state"), online ? 0 : 2},
+        });
+    }
+    return modules;
+}
+
+QVariantMap MatchUiProjection::buffTimedData() const {
+    return {};
+}
+
+QVariantMap MatchUiProjection::myRobot() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    return {
+        {QStringLiteral("isClientConnected"), robot.online},
+        {QStringLiteral("isOutOfCombat"), robot.online && robot.alive},
+        {QStringLiteral("isRedTeam"), true},
+        {QStringLiteral("superCapEnergy"),
+         robot.energy.superCapPercent},
+        {QStringLiteral("chassisMode"),
+         matchChassisModeLabel(robot.chassis.mode)},
+        {QStringLiteral("driveType"),
+         matchChassisDriveTypeLabel(robot.chassis.driveType)},
+        {QStringLiteral("wheelLegMode"),
+         matchWheelLegModeLabel(robot.wheelLeg.mode)},
+    };
 }
 
 } // namespace RM

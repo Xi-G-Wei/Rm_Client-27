@@ -609,6 +609,43 @@ private slots:
     QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("1"));
 
   }
+
+  void testOperatorVehiclePanelUsesMockSource() {
+    RM::MockMatchSource source;
+    QVERIFY(source.loadFromFile(
+        QStringLiteral(":/mock/3v3/match_3v3_basic.json")));
+    RM::MatchUiProjection projection(source.matchSession());
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("mockUiSource"),
+                                             &projection);
+    QQmlComponent component(
+        &engine, QUrl(QStringLiteral("qrc:/qml/LeftBottomPanel.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> panelObject(component.create());
+    QVERIFY2(panelObject, qPrintable(component.errorString()));
+    auto *panel = qobject_cast<QQuickItem *>(panelObject.data());
+    QVERIFY(panel);
+    panel->setWidth(520);
+    panel->setHeight(200);
+
+    QTRY_VERIFY(panel->property("uiFirstMode").toBool());
+    QVERIFY(panel->property("commandStyle").toBool());
+    QCOMPARE(panel->property("currentHP").toInt(), 400);
+    QCOMPARE(panel->property("bufferEnergy").toInt(), 40);
+    QCOMPARE(panel->property("superCapEnergy").toReal(), 74.0);
+    QCOMPARE(panel->property("chassisStatus").toString(),
+             QStringLiteral("普通 · 55 W"));
+    QTRY_VERIFY(panel->findChild<QObject *>(
+                    QStringLiteral("pilotVehicleCard")) != nullptr);
+
+    QVERIFY(source.start());
+    QVERIFY(source.advanceByMs(40000));
+    QTRY_COMPARE(panel->property("superCapEnergy").toReal(), 25.0);
+    QCOMPARE(panel->property("bufferEnergy").toInt(), 18);
+    QCOMPARE(panel->property("chassisStatus").toString(),
+             QStringLiteral("小陀螺 · 97 W"));
+  }
 };
 
 QTEST_MAIN(TestTacticalCommandPage)

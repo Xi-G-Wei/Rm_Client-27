@@ -117,8 +117,18 @@ Rectangle {
             Text {
                 visible: root.chassisStatus.length > 0
                 text: root.chassisStatus.startsWith("超限断电")
-                    ? root.chassisStatus : "功率增益 " + root.chassisStatus
+                    ? root.chassisStatus
+                    : root.chassisStatus.indexOf(" W") >= 0
+                        ? root.chassisStatus : "功率增益 " + root.chassisStatus
                 color: root.chassisStatus.startsWith("超限断电") ? "#ffa094" : "#a9d1f3"
+                font.pixelSize: 11 * root.unit
+                font.bold: true
+            }
+            Text {
+                visible: Number(root.game?.superCapEnergy ?? -1) >= 0
+                text: "超电 " + Math.round(Number(root.game.superCapEnergy)) + "%"
+                color: Number(root.game.superCapEnergy) < 20 ? "#ff9b8e"
+                    : Number(root.game.superCapEnergy) < 50 ? "#f4cb87" : "#8fe2ae"
                 font.pixelSize: 11 * root.unit
                 font.bold: true
             }

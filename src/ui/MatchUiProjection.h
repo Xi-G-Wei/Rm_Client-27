@@ -7,6 +7,7 @@
 namespace RM {
 
 class MatchSession;
+struct MatchRobotSnapshot;
 
 // 将协议无关的 MatchSnapshot 投影成现有战术页面需要的字段。
 // 后续真实协议接入时也应通过同一投影，而不是让 QML 解释原始报文。
@@ -63,6 +64,26 @@ class MatchUiProjection : public QObject {
     Q_PROPERTY(int blueDefenseBonus READ zeroInt NOTIFY updated)
     Q_PROPERTY(bool redBaseInvincible READ falseValue NOTIFY updated)
     Q_PROPERTY(bool blueBaseInvincible READ falseValue NOTIFY updated)
+    Q_PROPERTY(int currentHealth READ currentHealth NOTIFY updated)
+    Q_PROPERTY(int maxHealth READ maxHealth NOTIFY updated)
+    Q_PROPERTY(int chassisEnergy READ chassisEnergy NOTIFY updated)
+    Q_PROPERTY(int maxChassisEnergy READ maxChassisEnergy NOTIFY updated)
+    Q_PROPERTY(int bufferEnergy READ bufferEnergy NOTIFY updated)
+    Q_PROPERTY(int maxBufferEnergy READ maxBufferEnergy NOTIFY updated)
+    Q_PROPERTY(double superCapEnergy READ superCapEnergy NOTIFY updated)
+    Q_PROPERTY(int robotLevel READ robotLevel NOTIFY updated)
+    Q_PROPERTY(int maxlevel READ maxlevel NOTIFY updated)
+    Q_PROPERTY(int robotId READ robotId NOTIFY updated)
+    Q_PROPERTY(int currentExp READ currentExp NOTIFY updated)
+    Q_PROPERTY(int maxExp READ maxExp NOTIFY updated)
+    Q_PROPERTY(int yellowCardCount READ yellowCardCount NOTIFY updated)
+    Q_PROPERTY(QString outOfCombatStatus READ outOfCombatStatus NOTIFY updated)
+    Q_PROPERTY(QString chassisStatus READ chassisStatus NOTIFY updated)
+    Q_PROPERTY(bool isOutOfCombat READ isOutOfCombat NOTIFY updated)
+    Q_PROPERTY(QVariantList moduleStates READ moduleStates NOTIFY updated)
+    Q_PROPERTY(QVariantList moduleData READ moduleData NOTIFY updated)
+    Q_PROPERTY(QVariantMap buffTimedData READ buffTimedData NOTIFY updated)
+    Q_PROPERTY(QVariantMap myRobot READ myRobot NOTIFY updated)
 
 public:
     explicit MatchUiProjection(MatchSession *session,
@@ -102,11 +123,33 @@ public:
     QString blueTeamName() const;
     int zeroInt() const;
     bool falseValue() const;
+    int currentHealth() const;
+    int maxHealth() const;
+    int chassisEnergy() const;
+    int maxChassisEnergy() const;
+    int bufferEnergy() const;
+    int maxBufferEnergy() const;
+    double superCapEnergy() const;
+    int robotLevel() const;
+    int maxlevel() const;
+    int robotId() const;
+    int currentExp() const;
+    int maxExp() const;
+    int yellowCardCount() const;
+    QString outOfCombatStatus() const;
+    QString chassisStatus() const;
+    bool isOutOfCombat() const;
+    QVariantList moduleStates() const;
+    QVariantList moduleData() const;
+    QVariantMap buffTimedData() const;
+    QVariantMap myRobot() const;
 
 signals:
     void updated();
 
 private:
+    MatchRobotSnapshot operatorRobot() const;
+
     MatchSession *m_session = nullptr;
 };
 

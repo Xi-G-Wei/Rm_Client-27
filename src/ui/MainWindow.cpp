@@ -2859,6 +2859,10 @@ void MainWindow::createCenterArea() {
     m_leftBottomPanel->rootContext()->setContextProperty("gameData",
                                                          m_gameData);
   }
+  if (m_matchUiProjection && m_leftBottomPanel->rootContext()) {
+    m_leftBottomPanel->rootContext()->setContextProperty(
+        "mockUiSource", m_matchUiProjection);
+  }
 
   m_leftBottomPanel->setSource(QUrl("qrc:/qml/LeftBottomPanel.qml"));
 
