@@ -649,6 +649,13 @@ private slots:
     QVERIFY(source.pause());
     QTRY_COMPARE(redScore->property("text").toString(), QStringLiteral("1"));
 
+    QCOMPARE(hudItem->height(), rootItem->height());
+    QCOMPARE(hud->property("seatHeight").toInt(), 62);
+
+    rootItem->setHeight(202);
+    QTRY_COMPARE(hudItem->height(), rootItem->height());
+    QTRY_VERIFY(hud->property("seatHeight").toInt() >= 90);
+
   }
 
   void testOperatorVehiclePanelUsesMockSource() {

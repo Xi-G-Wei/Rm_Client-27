@@ -18,7 +18,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: 15
         anchors.top: parent.top
-        anchors.topMargin: 15
+        anchors.topMargin: 8
         customData: root.customData
         currentTheme: root.currentTheme
     }
@@ -28,7 +28,7 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: 15
         anchors.top: parent.top
-        anchors.topMargin: 15
+        anchors.topMargin: 8
         customData: root.customData
         currentTheme: root.currentTheme
     }

@@ -14,6 +14,9 @@ Item {
     required property string blueTeamName
     property bool compact: false
     implicitHeight: header.height + seats.height + 3
+    readonly property int minimumSeatHeight: compact ? 56 : 62
+    readonly property int seatHeight: Math.max(minimumSeatHeight,
+        Math.round(height - header.height - 3))
 
     DashboardMatchHeader {
         id: header
@@ -35,7 +38,7 @@ Item {
         anchors.leftMargin: header.margin
         anchors.rightMargin: Math.max(37, header.margin)
         anchors.topMargin: 3
-        height: root.compact ? 56 : 62
+        height: root.seatHeight
         spacing: 10
         TeamRoster {
             Layout.fillWidth: true
@@ -136,6 +139,8 @@ Item {
                         Layout.fillHeight: true
                         spacing: 0
 
+                        Item { Layout.fillHeight: true }
+
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
@@ -203,6 +208,8 @@ Item {
                             font.pixelSize: root.compact ? 8 : 9
                             elide: Text.ElideRight
                         }
+
+                        Item { Layout.fillHeight: true }
                     }
                 }
 

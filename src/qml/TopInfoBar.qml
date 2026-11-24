@@ -97,8 +97,7 @@ Item {
     }
 
     Loader {
-        anchors.top: parent.top
-        width: root.width
+        anchors.fill: parent
         active: root.currentSeason
         sourceComponent: Tactical.PilotMatchHud {
             objectName: "pilotMatchHud"
