@@ -5,34 +5,31 @@ Rectangle {
 
     property var source: null
     readonly property bool active: Boolean(root.source && root.source.loaded)
-    width: 760
-    height: 38
+    width: 350
+    height: 70
     radius: 3
     color: "#e5152530"
     border.width: 1
     border.color: "#6689a3b4"
     visible: root.active
 
-    Row {
+    Column {
         anchors.fill: parent
-        anchors.leftMargin: 7
-        anchors.rightMargin: 7
-        spacing: 5
+        anchors.margins: 6
+        spacing: 4
 
-        Text {
-            width: 72
-            anchors.verticalCenter: parent.verticalCenter
-            text: "本地模拟"
-            color: "#8fe2ae"
-            font.pixelSize: 11
-            font.bold: true
-        }
-
-        Grid {
-            anchors.verticalCenter: parent.verticalCenter
-            columns: 4
+        Row {
+            width: parent.width
+            height: 24
             spacing: 4
-
+            Text {
+                width: 67
+                anchors.verticalCenter: parent.verticalCenter
+                text: "本地模拟"
+                color: "#8fe2ae"
+                font.pixelSize: 11
+                font.bold: true
+            }
             SimButton {
                 label: "基础"
                 active: root.active
@@ -59,55 +56,46 @@ Rectangle {
             }
         }
 
-        Rectangle {
-            width: 1
-            height: parent.height - 10
-            anchors.verticalCenter: parent.verticalCenter
-            color: "#55718291"
-        }
-
-        SimButton {
-            anchors.verticalCenter: parent.verticalCenter
-            label: root.active && root.source.paused ? "继续" : "暂停"
-            active: root.active && root.source.paused
-            onTriggered: root.source.togglePause()
-        }
-        SimButton {
-            anchors.verticalCenter: parent.verticalCenter
-            label: "重置"
-            onTriggered: {
-                root.source.reset()
-                root.source.start()
+        Row {
+            width: parent.width
+            height: 24
+            spacing: 4
+            SimButton {
+                label: root.active && root.source.paused ? "继续" : "暂停"
+                active: root.active && root.source.paused
+                onTriggered: root.source.togglePause()
             }
-        }
-
-        Rectangle {
-            width: 1
-            height: parent.height - 10
-            anchors.verticalCenter: parent.verticalCenter
-            color: "#55718291"
-        }
-
-        SimButton {
-            anchors.verticalCenter: parent.verticalCenter
-            label: "0.5×"
-            active: root.active
-                && Math.abs(root.source.playbackRate - 0.5) < 0.01
-            onTriggered: root.source.setPlaybackRate(0.5)
-        }
-        SimButton {
-            anchors.verticalCenter: parent.verticalCenter
-            label: "1×"
-            active: root.active
-                && Math.abs(root.source.playbackRate - 1.0) < 0.01
-            onTriggered: root.source.setPlaybackRate(1.0)
-        }
-        SimButton {
-            anchors.verticalCenter: parent.verticalCenter
-            label: "2×"
-            active: root.active
-                && Math.abs(root.source.playbackRate - 2.0) < 0.01
-            onTriggered: root.source.setPlaybackRate(2.0)
+            SimButton {
+                label: "重置"
+                onTriggered: {
+                    root.source.reset()
+                    root.source.start()
+                }
+            }
+            Rectangle {
+                width: 1
+                height: parent.height - 4
+                anchors.verticalCenter: parent.verticalCenter
+                color: "#55718291"
+            }
+            SimButton {
+                label: "0.5×"
+                active: root.active
+                    && Math.abs(root.source.playbackRate - 0.5) < 0.01
+                onTriggered: root.source.setPlaybackRate(0.5)
+            }
+            SimButton {
+                label: "1×"
+                active: root.active
+                    && Math.abs(root.source.playbackRate - 1.0) < 0.01
+                onTriggered: root.source.setPlaybackRate(1.0)
+            }
+            SimButton {
+                label: "2×"
+                active: root.active
+                    && Math.abs(root.source.playbackRate - 2.0) < 0.01
+                onTriggered: root.source.setPlaybackRate(2.0)
+            }
         }
     }
 

@@ -214,6 +214,7 @@ Item {
             Layout.fillHeight: true
             spacing: root.compact ? 6 : 9
             Roster {
+                objectName: "commandRedRoster"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.maximumHeight: root.bases ? Number.POSITIVE_INFINITY : 26 + robots.length * 112
@@ -405,6 +406,7 @@ Item {
             Layout.fillHeight: true
             spacing: root.compact ? 6 : 9
             Roster {
+                objectName: "commandBlueRoster"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.maximumHeight: root.bases ? Number.POSITIVE_INFINITY : 26 + robots.length * 112

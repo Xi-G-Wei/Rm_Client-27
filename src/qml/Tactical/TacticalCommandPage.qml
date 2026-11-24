@@ -143,8 +143,9 @@ Rectangle {
         objectName: "mockScenarioPanel"
         source: root.mockSourceContext
         visible: root.uiFirstMode
-        x: Math.max(8, root.width - width - 12)
-        y: root.designSurfaceTop + 8
+        x: Math.max(8, root.width - Math.round(root.width * 0.1815)
+            - width - 48)
+        y: Math.max(8, Math.round(root.height * 0.012))
         z: 1000
     }
 

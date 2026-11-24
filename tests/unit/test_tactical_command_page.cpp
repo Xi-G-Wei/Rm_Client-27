@@ -563,6 +563,33 @@ private slots:
         page,
         QRectF(0, 0, battlefieldReport->width(), battlefieldReport->height()));
     QVERIFY(reportRect.top() - mapAreaRect.bottom() <= 8.0);
+
+    auto *scenarioPanel = qobject_cast<QQuickItem *>(
+        page->findChild<QObject *>(QStringLiteral("mockScenarioPanel")));
+    auto *blueRoster = qobject_cast<QQuickItem *>(
+        page->findChild<QObject *>(QStringLiteral("commandBlueRoster")));
+    QVERIFY(scenarioPanel);
+    QVERIFY(blueRoster);
+    QTRY_VERIFY(scenarioPanel->width() > 0 && blueRoster->width() > 0);
+    const QRectF scenarioPanelRect = scenarioPanel->mapRectToItem(
+        page,
+        QRectF(0, 0, scenarioPanel->width(), scenarioPanel->height()));
+    const QRectF blueRosterRect = blueRoster->mapRectToItem(
+        page, QRectF(0, 0, blueRoster->width(), blueRoster->height()));
+    QVERIFY(scenarioPanelRect.right() <= blueRosterRect.left());
+
+    QVERIFY(QMetaObject::invokeMethod(
+        page, "selectRobot", Q_ARG(QVariant, QVariant("red-3")),
+        Q_ARG(QVariant, false)));
+    auto *selectedPanel = qobject_cast<QQuickItem *>(
+        page->findChild<QObject *>(
+            QStringLiteral("commandSelectedRobotPanel")));
+    QVERIFY(selectedPanel);
+    QTRY_VERIFY(selectedPanel->isVisible());
+    const QRectF selectedPanelRect = selectedPanel->mapRectToItem(
+        page,
+        QRectF(0, 0, selectedPanel->width(), selectedPanel->height()));
+    QVERIFY(scenarioPanelRect.bottom() <= selectedPanelRect.top());
   }
 
   void testTopInfoBarUsesMockMatchSource() {
