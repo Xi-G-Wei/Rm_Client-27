@@ -54,6 +54,7 @@
 #include "../core/DataFreshnessGuard.h"
 #include "../core/ExecutionFusion.h"
 #include "../core/MapCoordinateMapper.h"
+#include "../core/MatchSourceController.h"
 #include "../core/ThreatRanker.h"
 #include "../simulator/MockMatchSource.h"
 #include "MatchUiProjection.h"
@@ -2444,20 +2445,11 @@ void MainWindow::createCenterArea() {
     m_tacticalAnalyzer->start(100);
   }
 
+  if (!m_matchSourceController) {
+    m_matchSourceController = new RM::MatchSourceController(this);
+  }
   if (qEnvironmentVariableIsSet("RM_UI_FIRST_MOCK") &&
       !m_mockMatchSource) {
-    m_mockMatchSource = new RM::MockMatchSource(this);
-    connect(m_mockMatchSource,
-            &RM::MockMatchSource::errorOccurred,
-            this,
-            [](const QString &message) {
-              qWarning() << "UI-first mock:" << message;
-            });
-    connect(m_mockMatchSource,
-            &RM::MockMatchSource::scenarioCompleted,
-            this,
-            []() { qInfo() << "UI-first mock scenario completed"; });
-
     QString scenarioPath = qEnvironmentVariable("RM_UI_FIRST_SCENARIO");
     if (scenarioPath.trimmed().isEmpty()) {
       scenarioPath =
@@ -2472,15 +2464,27 @@ void MainWindow::createCenterArea() {
           QStringLiteral(":/mock/3v3/") + scenarioPath;
     }
 
-    if (m_mockMatchSource->loadFromFile(scenarioPath)) {
+    if (m_matchSourceController->selectMock(scenarioPath)) {
+      m_mockMatchSource = m_matchSourceController->mockSource();
+      connect(m_mockMatchSource,
+              &RM::MockMatchSource::errorOccurred,
+              this,
+              [](const QString &message) {
+                qWarning() << "UI-first mock:" << message;
+              });
+      connect(m_mockMatchSource,
+              &RM::MockMatchSource::scenarioCompleted,
+              this,
+              []() { qInfo() << "UI-first mock scenario completed"; });
       m_matchUiProjection =
           new RM::MatchUiProjection(
               m_mockMatchSource->matchSession(), this);
-      m_mockMatchSource->start();
       qInfo() << "UI-first mock loaded:" << scenarioPath;
     } else {
       qWarning() << "UI-first mock load failed:" << scenarioPath;
     }
+  } else if (!m_mockMatchSource) {
+    m_matchSourceController->selectReal();
   }
   if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {
     if (m_matchUiProjection) {
@@ -2510,6 +2514,8 @@ void MainWindow::createCenterArea() {
                                                          m_tacticalAnalyzer);
   }
   if (m_qmlTacticalPage->rootContext()) {
+    m_qmlTacticalPage->rootContext()->setContextProperty(
+        "matchSourceController", m_matchSourceController);
     m_qmlTacticalPage->rootContext()->setContextProperty(
         "mockMatchSource", m_mockMatchSource);
     m_qmlTacticalPage->rootContext()->setContextProperty(

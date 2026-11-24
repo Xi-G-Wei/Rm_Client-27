@@ -132,8 +132,37 @@ RM_UI_FIRST_SCENARIO=match_3v3_offline \
 真实通信接入后应继续生成 `MatchSnapshot`，再复用该投影。QML 不读取原始
 MQTT Payload。
 
+## 数据源边界
+
+`MatchDataSource` 定义模拟源和未来真实源的统一最小接口：
+
+```text
+matchSession()
+sourceKind()
+sourceName()
+isAvailable()
+statusText()
+```
+
+`MockMatchSource` 已实现该接口。`MatchSourceController` 负责选择数据源：
+
+- `selectMock()`：加载 JSON 模拟源并启动
+- `selectReal()`：建立真实源占位，明确等待通信接入
+
+正式启动默认选择真实源占位；设置 `RM_UI_FIRST_MOCK=1` 时选择模拟源。未来实现
+真实协议时，只需提供新的 `MatchDataSource` 实现，并继续写入 `MatchSession`。
+
+`MatchDataHealth` 统一评估比赛快照：
+
+- 1.5 秒内为 Fresh
+- 1.5 到 5 秒为 Stale
+- 5 秒以上为 Expired
+- 无有效快照为 Unavailable
+
+同时统计在线/离线机器人、公开/内部遥测机器人和未知字段数量。
+
 ## 当前边界
 
-本地模拟已经接入 3v3 指挥页和操作页顶部，但仍然只读：操作页左下车辆详情、
-提示音、视频区域和上行控制还没有使用本地快照。下一阶段将补齐低超电、
-超功率、离线、阵亡和结算提示，并增加本地暂停、重置和场景切换入口。
+本地模拟已经接入 3v3 指挥页、操作页顶部和操作页左下车辆卡，并完成暂停、
+重置、场景切换、异常提示和地图选车。提示音、视频区域和上行控制仍未接入，
+真实协议源目前只是可选择的占位实现。

@@ -50,6 +50,11 @@ target_compile_definitions(test_match_ui_projection PRIVATE
     RM_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 rm26_add_qt_test(TestMatchUiProjection test_match_ui_projection)
 
+# 数据源选择、健康度和权限边界测试
+add_executable(test_match_source_boundary unit/test_match_source_boundary.cpp)
+target_link_libraries(test_match_source_boundary PRIVATE Qt6::Core Qt6::Test RoboMasterClientLib)
+rm26_add_qt_test(TestMatchSourceBoundary test_match_source_boundary)
+
 # 血条组件测试
 add_executable(test_health_bar unit/test_health_bar.cpp)
 target_link_libraries(test_health_bar PRIVATE Qt6::Core Qt6::Widgets Qt6::Test RoboMasterClientLib)

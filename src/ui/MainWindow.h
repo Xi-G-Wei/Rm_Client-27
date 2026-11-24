@@ -55,6 +55,7 @@ class ThreatRanker;
 class ExecutionFusion;
 class MockMatchSource;
 class MatchUiProjection;
+class MatchSourceController;
 }
 #include "../widgets/VideoBackgroundWidget.h"
 #include "../widgets/GameResultWidget.h"
@@ -538,6 +539,7 @@ private:
   NetworkManager *m_networkManager = nullptr; // 网络通信管理器
   RM::TacticalAnalyzer *m_tacticalAnalyzer = nullptr; // 战术分析引擎
   RM::MockMatchSource *m_mockMatchSource = nullptr; // UI-first 本地比赛源
+  RM::MatchSourceController *m_matchSourceController = nullptr;
   RM::MatchUiProjection *m_matchUiProjection = nullptr; // 本地快照的界面投影
   MqttClient *m_mqttClient = nullptr;          // MQTT 客户端（可选，取决于是否找到 Qt6::Mqtt）
   QMediaPlayer *m_bgmPlayer = nullptr;        // 背景音乐播放器

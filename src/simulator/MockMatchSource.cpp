@@ -1074,6 +1074,27 @@ MatchSession *MockMatchSource::matchSession() const {
     return m_session;
 }
 
+QString MockMatchSource::sourceKind() const {
+    return QStringLiteral("mock");
+}
+
+QString MockMatchSource::sourceName() const {
+    return scenarioName();
+}
+
+bool MockMatchSource::isAvailable() const {
+    return d->loaded && m_session && m_session->isValid();
+}
+
+QString MockMatchSource::statusText() const {
+    if (!d->loaded) {
+        return QStringLiteral("模拟场景未加载");
+    }
+    return d->completed ? QStringLiteral("模拟比赛已结束")
+                        : d->paused ? QStringLiteral("模拟比赛已暂停")
+                                    : QStringLiteral("模拟比赛运行中");
+}
+
 QVariantMap MockMatchSource::snapshot() const {
     return m_session->snapshot();
 }

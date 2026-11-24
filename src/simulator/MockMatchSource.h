@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/MatchSession.h"
+#include "core/MatchDataSource.h"
 
 #include <QElapsedTimer>
 #include <QObject>
@@ -15,7 +16,7 @@ class MockMatchSourcePrivate;
 
 // JSON 场景驱动的本地比赛源。界面只读取 MatchSession，后续真实协议适配器
 // 可以替换这个数据源而不改变 QML 契约。
-class MockMatchSource : public QObject {
+class MockMatchSource : public QObject, public MatchDataSource {
     Q_OBJECT
     Q_PROPERTY(RM::MatchSession *matchSession READ matchSession CONSTANT)
     Q_PROPERTY(QVariantMap snapshot READ snapshot NOTIFY snapshotChanged)
@@ -34,6 +35,10 @@ public:
     ~MockMatchSource() override;
 
     MatchSession *matchSession() const;
+    QString sourceKind() const override;
+    QString sourceName() const override;
+    bool isAvailable() const override;
+    QString statusText() const override;
     QVariantMap snapshot() const;
     QString scenarioId() const;
     QString scenarioName() const;
