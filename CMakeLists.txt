@@ -329,6 +329,7 @@ set(SOURCES
     ${PROTO_SRCS}
     src/core/GameData.cpp
     src/core/CommandDashboardData.cpp
+    src/core/MatchSession.cpp
     src/core/LogFileNaming.cpp
     src/core/TimedEventRules.cpp
     src/core/PopupStateMachine.cpp
@@ -376,6 +377,7 @@ set(HEADERS
     src/network/H264StreamRecoveryPolicy.h
     src/network/S1ProtocolManager.h
     src/core/GameData.h
+    src/core/MatchSession.h
     src/core/LogFileNaming.h
     src/core/TimedEventRules.h
     src/core/PopupTypes.h

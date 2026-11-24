@@ -31,6 +31,11 @@ add_executable(test_game_data unit/test_game_data.cpp)
 target_link_libraries(test_game_data PRIVATE Qt6::Core Qt6::Test RoboMasterClientLib)
 rm26_add_qt_test(TestGameData test_game_data)
 
+# UI-first 3v3 数据契约测试
+add_executable(test_match_session unit/test_match_session.cpp)
+target_link_libraries(test_match_session PRIVATE Qt6::Core Qt6::Test RoboMasterClientLib)
+rm26_add_qt_test(TestMatchSession test_match_session)
+
 # 血条组件测试
 add_executable(test_health_bar unit/test_health_bar.cpp)
 target_link_libraries(test_health_bar PRIVATE Qt6::Core Qt6::Widgets Qt6::Test RoboMasterClientLib)
