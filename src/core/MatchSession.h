@@ -153,6 +153,18 @@ struct MatchRobotSnapshot {
 struct MatchTeamSnapshot {
     QString name;
     int score = 0;
+    int economy = kUnknownMatchMetric;
+    int totalEconomyObtained = kUnknownMatchMetric;
+    int techLevel = kUnknownMatchMetric;
+    int encryptionLevel = kUnknownMatchMetric;
+    int baseHealth = kUnknownMatchMetric;
+    int baseMaxHealth = kUnknownMatchMetric;
+    int baseStatus = kUnknownMatchMetric;
+    int outpostHealth = kUnknownMatchMetric;
+    int outpostMaxHealth = kUnknownMatchMetric;
+    int outpostStatus = kUnknownMatchMetric;
+    int controlPoints = kUnknownMatchMetric;
+    int totalDamage = kUnknownMatchMetric;
     QList<MatchRobotSnapshot> robots;
 
     QVariantMap toVariantMap() const;

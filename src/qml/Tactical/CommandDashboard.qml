@@ -576,11 +576,17 @@ Item {
             KeyTip { visible: root.pageRoot.mockControlsActive; keyText: "F7"; label: "切换场景" }
             Item { Layout.fillWidth: true }
             Text {
-                text: root.dashboard.replayMode ? "比赛回放运行中"
-                    : root.dashboard.mockMode
-                    ? (root.dashboard.leadText || "本地模拟") + " · 运行中"
-                    : root.dashboard.statusFresh ? "裁判数据更新中" : "等待裁判数据"
-                color: root.dashboard.statusFresh ? "#a6dfc8" : "#e3bc83"
+                text: {
+                    const source = root.dashboard.replayMode ? "比赛回放"
+                        : root.dashboard.mockMode ? "本地模拟" : "真实数据"
+                    const health = root.dashboard.dataHealthLabel || "暂无数据"
+                    const unknown = Number(root.dashboard.unknownFieldCount || 0)
+                    return source + " · " + health
+                        + (unknown > 0 ? " · 未知 " + unknown : "")
+                }
+                color: root.dashboard.dataHealth === "fresh" ? "#a6dfc8"
+                    : root.dashboard.dataHealth === "stale" ? "#e3bc83"
+                    : "#ff9b8e"
                 font.pixelSize: 10
             }
             Text {

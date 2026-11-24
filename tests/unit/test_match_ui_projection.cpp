@@ -53,6 +53,12 @@ private slots:
         QCOMPARE(dashboard.value(QStringLiteral("blueRobots")).toList().size(),
                  3);
         QVERIFY(dashboard.value(QStringLiteral("mockMode")).toBool());
+        QCOMPARE(dashboard.value(QStringLiteral("sourceKind")).toString(),
+                 QStringLiteral("mock"));
+        QCOMPARE(dashboard.value(QStringLiteral("dataHealth")).toString(),
+                 QStringLiteral("fresh"));
+        QCOMPARE(dashboard.value(QStringLiteral("unknownFieldCount")).toInt(),
+                 0);
 
         const QVariantMap redHeavy =
             firstRobot(dashboard, QStringLiteral("redRobots"));
@@ -178,6 +184,21 @@ private slots:
                      .value(QStringLiteral("isClientConnected"))
                      .toBool());
         QCOMPARE(projection.moduleStates().first().toInt(), 2);
+    }
+
+    void acceleratedLongRunCompletesWithoutHanging() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(scenarioPath()));
+        source.setPlaybackRate(4.0);
+        QVERIFY(source.start());
+        QVERIFY(source.advanceByMs(60000));
+        QVERIFY(source.isCompleted());
+        QCOMPARE(source.snapshot().value(QStringLiteral("phase")).toString(),
+                 QStringLiteral("settlement"));
+        QVERIFY(source.snapshot()
+                    .value(QStringLiteral("events"))
+                    .toList()
+                    .size() >= 7);
     }
 };
 

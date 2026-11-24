@@ -137,6 +137,18 @@ QJsonObject teamToJson(const MatchTeamSnapshot &team) {
     return {
         {QStringLiteral("name"), team.name},
         {QStringLiteral("score"), team.score},
+        {QStringLiteral("economy"), team.economy},
+        {QStringLiteral("totalEconomyObtained"), team.totalEconomyObtained},
+        {QStringLiteral("techLevel"), team.techLevel},
+        {QStringLiteral("encryptionLevel"), team.encryptionLevel},
+        {QStringLiteral("baseHealth"), team.baseHealth},
+        {QStringLiteral("baseMaxHealth"), team.baseMaxHealth},
+        {QStringLiteral("baseStatus"), team.baseStatus},
+        {QStringLiteral("outpostHealth"), team.outpostHealth},
+        {QStringLiteral("outpostMaxHealth"), team.outpostMaxHealth},
+        {QStringLiteral("outpostStatus"), team.outpostStatus},
+        {QStringLiteral("controlPoints"), team.controlPoints},
+        {QStringLiteral("totalDamage"), team.totalDamage},
         {QStringLiteral("robots"), robots},
     };
 }
@@ -287,6 +299,26 @@ bool parseTeam(const QJsonObject &object,
     if (!readInt(object, QStringLiteral("score"), &team->score, error)) {
         return false;
     }
+    team->economy = object.value(QStringLiteral("economy")).toInt(-1);
+    team->totalEconomyObtained =
+        object.value(QStringLiteral("totalEconomyObtained")).toInt(-1);
+    team->techLevel = object.value(QStringLiteral("techLevel")).toInt(-1);
+    team->encryptionLevel =
+        object.value(QStringLiteral("encryptionLevel")).toInt(-1);
+    team->baseHealth = object.value(QStringLiteral("baseHealth")).toInt(-1);
+    team->baseMaxHealth =
+        object.value(QStringLiteral("baseMaxHealth")).toInt(-1);
+    team->baseStatus = object.value(QStringLiteral("baseStatus")).toInt(-1);
+    team->outpostHealth =
+        object.value(QStringLiteral("outpostHealth")).toInt(-1);
+    team->outpostMaxHealth =
+        object.value(QStringLiteral("outpostMaxHealth")).toInt(-1);
+    team->outpostStatus =
+        object.value(QStringLiteral("outpostStatus")).toInt(-1);
+    team->controlPoints =
+        object.value(QStringLiteral("controlPoints")).toInt(-1);
+    team->totalDamage =
+        object.value(QStringLiteral("totalDamage")).toInt(-1);
     const QJsonArray robots = object.value(QStringLiteral("robots")).toArray();
     for (const QJsonValue &value : robots) {
         MatchRobotSnapshot robot;

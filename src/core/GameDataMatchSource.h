@@ -5,6 +5,7 @@
 #include "core/MatchSession.h"
 
 #include <QObject>
+#include <QList>
 #include <QTimer>
 
 namespace RM {
@@ -33,13 +34,20 @@ signals:
     void stateChanged();
 
 private:
-    MatchSnapshot buildSnapshot(QString *error) const;
+    MatchSnapshot buildSnapshot(QString *error);
     MatchPhase mapPhase(::GameStage stage) const;
+    void appendEvent(const QString &type,
+                     const QString &message,
+                     bool hasSide = false,
+                     MatchSide side = MatchSide::Red,
+                     int robotSlot = -1);
 
     ::GameData *m_gameData = nullptr;
     MatchSession *m_session = nullptr;
     QTimer m_timer;
     QString m_lastError;
+    QList<MatchEventSnapshot> m_events;
+    quint64 m_nextEventSequence = 1;
 };
 
 } // namespace RM

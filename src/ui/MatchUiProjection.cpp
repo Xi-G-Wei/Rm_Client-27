@@ -1,5 +1,6 @@
 #include "ui/MatchUiProjection.h"
 
+#include "core/MatchDataHealth.h"
 #include "core/MatchSession.h"
 
 #include <QDateTime>
@@ -192,6 +193,32 @@ QString MatchUiProjection::sourceKind() const {
     return m_sourceKind;
 }
 
+QString MatchUiProjection::dataHealth() const {
+    if (!m_session)
+        return QStringLiteral("unavailable");
+    return matchDataHealthKey(
+        assessMatchDataHealth(
+            m_session->matchSnapshot(),
+            QDateTime::currentMSecsSinceEpoch()).level);
+}
+
+int MatchUiProjection::dataAgeMs() const {
+    if (!m_session)
+        return -1;
+    return static_cast<int>(
+        assessMatchDataHealth(
+            m_session->matchSnapshot(),
+            QDateTime::currentMSecsSinceEpoch()).ageMs);
+}
+
+int MatchUiProjection::unknownFieldCount() const {
+    if (!m_session)
+        return 0;
+    return assessMatchDataHealth(
+        m_session->matchSnapshot(),
+        QDateTime::currentMSecsSinceEpoch()).unknownFieldCount;
+}
+
 QVariantMap MatchUiProjection::snapshot() const {
     return m_session ? m_session->snapshot() : QVariantMap{};
 }
@@ -201,16 +228,22 @@ QVariantMap MatchUiProjection::dashboardData() const {
         return {};
     }
     const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    const MatchDataHealth health = assessMatchDataHealth(
+        snapshot, QDateTime::currentMSecsSinceEpoch());
     const int redScore = snapshot.redTeam.score;
     const int blueScore = snapshot.blueTeam.score;
+    const QString sourcePrefix = mockMode()
+        ? QStringLiteral("本地模拟")
+        : replayMode() ? QStringLiteral("回放")
+                       : QStringLiteral("真实数据");
     int leadingSide = 0;
-    QString leadText = QStringLiteral("本地模拟 · 比分持平");
+    QString leadText = sourcePrefix + QStringLiteral(" · 比分持平");
     if (redScore > blueScore) {
         leadingSide = 1;
-        leadText = QStringLiteral("本地模拟 · 红方领先");
+        leadText = sourcePrefix + QStringLiteral(" · 红方领先");
     } else if (blueScore > redScore) {
         leadingSide = 2;
-        leadText = QStringLiteral("本地模拟 · 蓝方领先");
+        leadText = sourcePrefix + QStringLiteral(" · 蓝方领先");
     }
     return {
         {QStringLiteral("redRobots"), robotCards(snapshot.redTeam)},
@@ -222,10 +255,17 @@ QVariantMap MatchUiProjection::dashboardData() const {
         {QStringLiteral("statusFresh"), true},
         {QStringLiteral("mockMode"), mockMode()},
         {QStringLiteral("replayMode"), replayMode()},
-        {QStringLiteral("economyReported"), false},
+        {QStringLiteral("sourceKind"), sourceKind()},
+        {QStringLiteral("dataHealth"), matchDataHealthKey(health.level)},
+        {QStringLiteral("dataHealthLabel"),
+         matchDataHealthLabel(health)},
+        {QStringLiteral("dataAgeMs"), health.ageMs},
+        {QStringLiteral("unknownFieldCount"), health.unknownFieldCount},
+        {QStringLiteral("economyReported"),
+         snapshot.redTeam.economy >= 0 || snapshot.blueTeam.economy >= 0},
         {QStringLiteral("redDarts"), QVariantList{}},
         {QStringLiteral("blueDarts"), QVariantList{}},
-        {QStringLiteral("playerName"), QStringLiteral("本地模拟操作手")},
+        {QStringLiteral("playerName"), sourcePrefix + QStringLiteral("操作手")},
     };
 }
 
@@ -250,27 +290,41 @@ QVariantMap MatchUiProjection::headerData() const {
 }
 
 QVariantMap MatchUiProjection::resourceData() const {
+    if (!m_session)
+        return {};
+    const MatchSnapshot &snapshot = m_session->matchSnapshot();
     return {
-        {QStringLiteral("allyBaseHp"), 0},
-        {QStringLiteral("allyBaseMax"), 0},
-        {QStringLiteral("enemyBaseHp"), 0},
-        {QStringLiteral("enemyBaseMax"), 0},
-        {QStringLiteral("allyOutpostHp"), 0},
-        {QStringLiteral("allyOutpostMax"), 0},
-        {QStringLiteral("enemyOutpostHp"), 0},
-        {QStringLiteral("enemyOutpostMax"), 0},
-        {QStringLiteral("economyDiff"), 0},
-        {QStringLiteral("damageDiff"), 0},
+        {QStringLiteral("allyBaseHp"), snapshot.redTeam.baseHealth},
+        {QStringLiteral("allyBaseMax"), snapshot.redTeam.baseMaxHealth},
+        {QStringLiteral("enemyBaseHp"), snapshot.blueTeam.baseHealth},
+        {QStringLiteral("enemyBaseMax"), snapshot.blueTeam.baseMaxHealth},
+        {QStringLiteral("allyOutpostHp"), snapshot.redTeam.outpostHealth},
+        {QStringLiteral("allyOutpostMax"), snapshot.redTeam.outpostMaxHealth},
+        {QStringLiteral("enemyOutpostHp"), snapshot.blueTeam.outpostHealth},
+        {QStringLiteral("enemyOutpostMax"), snapshot.blueTeam.outpostMaxHealth},
+        {QStringLiteral("economyDiff"),
+         snapshot.redTeam.economy >= 0 && snapshot.blueTeam.economy >= 0
+             ? snapshot.redTeam.economy - snapshot.blueTeam.economy : 0},
+        {QStringLiteral("damageDiff"),
+         snapshot.redTeam.totalDamage >= 0 &&
+                 snapshot.blueTeam.totalDamage >= 0
+             ? snapshot.redTeam.totalDamage - snapshot.blueTeam.totalDamage : 0},
         {QStringLiteral("hpDiff"), 0},
     };
 }
 
 QVariantMap MatchUiProjection::topStatusData() const {
+    const MatchSnapshot snapshot =
+        m_session ? m_session->matchSnapshot() : MatchSnapshot{};
     return {
-        {QStringLiteral("allyRemainingEconomy"), 0},
-        {QStringLiteral("allyTotalEconomyObtained"), 0},
-        {QStringLiteral("allyTechLevel"), 0},
-        {QStringLiteral("allyEncryptionLevel"), 0},
+        {QStringLiteral("allyRemainingEconomy"),
+         qMax(0, snapshot.redTeam.economy)},
+        {QStringLiteral("allyTotalEconomyObtained"),
+         qMax(0, snapshot.redTeam.totalEconomyObtained)},
+        {QStringLiteral("allyTechLevel"),
+         qMax(0, snapshot.redTeam.techLevel)},
+        {QStringLiteral("allyEncryptionLevel"),
+         qMax(0, snapshot.redTeam.encryptionLevel)},
         {QStringLiteral("allyFortressOccupationSec"), 0},
         {QStringLiteral("enemyFortressOccupationSec"), 0},
         {QStringLiteral("respawnGoldCost"), 0},

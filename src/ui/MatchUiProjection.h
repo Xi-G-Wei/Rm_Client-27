@@ -17,6 +17,9 @@ class MatchUiProjection : public QObject {
     Q_PROPERTY(bool mockMode READ mockMode CONSTANT)
     Q_PROPERTY(bool replayMode READ replayMode CONSTANT)
     Q_PROPERTY(QString sourceKind READ sourceKind CONSTANT)
+    Q_PROPERTY(QString dataHealth READ dataHealth NOTIFY updated)
+    Q_PROPERTY(int dataAgeMs READ dataAgeMs NOTIFY updated)
+    Q_PROPERTY(int unknownFieldCount READ unknownFieldCount NOTIFY updated)
     Q_PROPERTY(QVariantMap snapshot READ snapshot NOTIFY updated)
     Q_PROPERTY(QVariantMap dashboardData READ dashboardData NOTIFY updated)
     Q_PROPERTY(QVariantMap headerData READ headerData NOTIFY updated)
@@ -96,6 +99,9 @@ public:
     bool mockMode() const;
     bool replayMode() const;
     QString sourceKind() const;
+    QString dataHealth() const;
+    int dataAgeMs() const;
+    int unknownFieldCount() const;
     QVariantMap snapshot() const;
     QVariantMap dashboardData() const;
     QVariantMap headerData() const;

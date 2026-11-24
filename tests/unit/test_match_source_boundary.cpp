@@ -122,6 +122,18 @@ private slots:
                  RM::MatchTelemetryScope::Private);
         QCOMPARE(restored.blueTeam.robots.first().telemetryScope,
                  RM::MatchTelemetryScope::Public);
+
+        RM::MatchSnapshot extended = original;
+        extended.redTeam.economy = 1200;
+        extended.blueTeam.economy = 900;
+        extended.redTeam.controlPoints = 8;
+        extended.blueTeam.controlPoints = 7;
+        extended.redTeam.totalDamage = 2500;
+        RM::MatchSnapshot extendedRestored;
+        QVERIFY(RM::matchSnapshotFromJson(
+            RM::matchSnapshotToJson(extended), &extendedRestored, &error));
+        QCOMPARE(extendedRestored.redTeam.economy, 1200);
+        QCOMPARE(extendedRestored.blueTeam.controlPoints, 7);
     }
 
     void recordedMatchCanBeReplayed() {
@@ -194,8 +206,18 @@ private slots:
         current.status = RobotStatus::NORMAL;
         current.isClientConnected = true;
         current.lastUpdateTime = QDateTime::currentDateTime();
+        gameData.setRedEconomy(1200);
+        gameData.setBlueEconomy(900);
+        DamageEventData damage{};
+        damage.attackerId = 3;
+        damage.victimId = 103;
+        damage.damage = 250;
+        damage.armorId = 1;
+        damage.hurtType = 0;
+        gameData.recordDamageEvent(damage);
 
         RM::GameDataMatchSource source(&gameData);
+        gameData.killEventOccurred(KillRecord(3, 103, 1, false));
         source.refresh();
         QVERIFY2(source.isAvailable(), qPrintable(source.statusText()));
         QCOMPARE(source.sourceKind(), QStringLiteral("real"));
@@ -212,6 +234,11 @@ private slots:
                  RM::MatchTelemetryScope::Public);
         QCOMPARE(snapshot.redTeam.robots[1].health, 320);
         QCOMPARE(snapshot.redTeam.robots[1].energy.superCapPercent, 72.5);
+        QCOMPARE(snapshot.redTeam.economy, 1200);
+        QCOMPARE(snapshot.blueTeam.economy, 900);
+        QCOMPARE(snapshot.redTeam.totalDamage, 250);
+        QVERIFY(!snapshot.events.isEmpty());
+        QCOMPARE(snapshot.events.last().type, QStringLiteral("kill"));
     }
 };
 

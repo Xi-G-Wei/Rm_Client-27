@@ -324,6 +324,30 @@ void validateTeam(QList<MatchValidationIssue> *issues,
                  path + QStringLiteral(".robots"),
                  QStringLiteral("3v3 每队必须恰好包含 3 台机器人"));
     }
+    validateMetric(issues, path + QStringLiteral(".economy"),
+                   team.economy, true);
+    validateMetric(issues, path + QStringLiteral(".totalEconomyObtained"),
+                   team.totalEconomyObtained, true);
+    validateMetric(issues, path + QStringLiteral(".techLevel"),
+                   team.techLevel, true);
+    validateMetric(issues, path + QStringLiteral(".encryptionLevel"),
+                   team.encryptionLevel, true);
+    validateMetric(issues, path + QStringLiteral(".baseHealth"),
+                   team.baseHealth, true);
+    validateMetric(issues, path + QStringLiteral(".baseMaxHealth"),
+                   team.baseMaxHealth, false);
+    validateMetric(issues, path + QStringLiteral(".baseStatus"),
+                   team.baseStatus, true);
+    validateMetric(issues, path + QStringLiteral(".outpostHealth"),
+                   team.outpostHealth, true);
+    validateMetric(issues, path + QStringLiteral(".outpostMaxHealth"),
+                   team.outpostMaxHealth, false);
+    validateMetric(issues, path + QStringLiteral(".outpostStatus"),
+                   team.outpostStatus, true);
+    validateMetric(issues, path + QStringLiteral(".controlPoints"),
+                   team.controlPoints, true);
+    validateMetric(issues, path + QStringLiteral(".totalDamage"),
+                   team.totalDamage, true);
 
     QSet<int> usedSlots;
     for (const MatchRobotSnapshot &robot : team.robots) {
@@ -565,6 +589,18 @@ QVariantMap MatchTeamSnapshot::toVariantMap() const {
     return {
         {QStringLiteral("name"), name},
         {QStringLiteral("score"), score},
+        {QStringLiteral("economy"), economy},
+        {QStringLiteral("totalEconomyObtained"), totalEconomyObtained},
+        {QStringLiteral("techLevel"), techLevel},
+        {QStringLiteral("encryptionLevel"), encryptionLevel},
+        {QStringLiteral("baseHealth"), baseHealth},
+        {QStringLiteral("baseMaxHealth"), baseMaxHealth},
+        {QStringLiteral("baseStatus"), baseStatus},
+        {QStringLiteral("outpostHealth"), outpostHealth},
+        {QStringLiteral("outpostMaxHealth"), outpostMaxHealth},
+        {QStringLiteral("outpostStatus"), outpostStatus},
+        {QStringLiteral("controlPoints"), controlPoints},
+        {QStringLiteral("totalDamage"), totalDamage},
         {QStringLiteral("robots"), robotMaps},
     };
 }

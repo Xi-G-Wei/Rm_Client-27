@@ -4,6 +4,8 @@
 
 #include <QDateTime>
 
+#include <climits>
+
 namespace RM {
 namespace {
 
@@ -32,6 +34,45 @@ GameDataMatchSource::GameDataMatchSource(::GameData *gameData, QObject *parent)
                 &GameData::myRobotUpdated,
                 this,
                 &GameDataMatchSource::refresh);
+        connect(m_gameData,
+                &GameData::killEventOccurred,
+                this,
+                [this](const KillRecord &record) {
+                    appendEvent(
+                        QStringLiteral("kill"),
+                        QStringLiteral("机器人 %1 击毁机器人 %2")
+                            .arg(record.killerId)
+                            .arg(record.victimId),
+                        record.killerId > 0,
+                        record.killerId >= 100 ? MatchSide::Blue
+                                               : MatchSide::Red,
+                        record.victimId % 100);
+                });
+        connect(m_gameData,
+                &GameData::systemMessageReceived,
+                this,
+                [this](const QString &message) {
+                    appendEvent(QStringLiteral("system"), message);
+                });
+        connect(m_gameData,
+                &GameData::officialEventPopupRequested,
+                this,
+                [this](int eventId, const QString &message) {
+                    appendEvent(
+                        QStringLiteral("event_%1").arg(eventId), message);
+                });
+        connect(m_gameData,
+                &GameData::baseUnderAttackEvent,
+                this,
+                [this](bool isRedTeam) {
+                    appendEvent(
+                        QStringLiteral("base_under_attack"),
+                        QStringLiteral("%1基地遭到攻击")
+                            .arg(isRedTeam ? QStringLiteral("红方")
+                                           : QStringLiteral("蓝方")),
+                        true,
+                        isRedTeam ? MatchSide::Red : MatchSide::Blue);
+                });
     }
     m_timer.start();
     refresh();
@@ -105,7 +146,7 @@ MatchPhase GameDataMatchSource::mapPhase(::GameStage stage) const {
     return MatchPhase::NotStarted;
 }
 
-MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) const {
+MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
     MatchSnapshot snapshot;
     snapshot.matchId = QStringLiteral("real-game-data");
     snapshot.profile = QStringLiteral("rmul3v3");
@@ -116,6 +157,46 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) const {
     snapshot.redTeam.score = m_gameData->redScore();
     snapshot.blueTeam.name = m_gameData->blueTeamName();
     snapshot.blueTeam.score = m_gameData->blueScore();
+    snapshot.redTeam.economy = m_gameData->redEconomy();
+    snapshot.blueTeam.economy = m_gameData->blueEconomy();
+    snapshot.redTeam.totalEconomyObtained =
+        qMin<qint64>(m_gameData->redTotalEconomyObtained(), INT_MAX);
+    snapshot.blueTeam.totalEconomyObtained =
+        qMin<qint64>(m_gameData->blueTotalEconomyObtained(), INT_MAX);
+    snapshot.redTeam.techLevel = m_gameData->redTechLevel();
+    snapshot.blueTeam.techLevel = m_gameData->blueTechLevel();
+    snapshot.redTeam.encryptionLevel = m_gameData->redEncryptionLevel();
+    snapshot.blueTeam.encryptionLevel = m_gameData->blueEncryptionLevel();
+    snapshot.redTeam.totalDamage = m_gameData->redTotalDamage();
+    snapshot.blueTeam.totalDamage = m_gameData->blueTotalDamage();
+
+    const QVariantMap territory = m_gameData->territoryStatus();
+    if (territory.contains(QStringLiteral("redPoints"))) {
+        snapshot.redTeam.controlPoints =
+            territory.value(QStringLiteral("redPoints")).toInt();
+    }
+    if (territory.contains(QStringLiteral("bluePoints"))) {
+        snapshot.blueTeam.controlPoints =
+            territory.value(QStringLiteral("bluePoints")).toInt();
+    }
+    if (m_gameData->hasBases()) {
+        const BaseData &redBase = m_gameData->getRedBase();
+        const BaseData &blueBase = m_gameData->getBlueBase();
+        snapshot.redTeam.baseHealth = redBase.currentHP;
+        snapshot.redTeam.baseMaxHealth = redBase.maxHP;
+        snapshot.redTeam.baseStatus = redBase.status;
+        snapshot.blueTeam.baseHealth = blueBase.currentHP;
+        snapshot.blueTeam.baseMaxHealth = blueBase.maxHP;
+        snapshot.blueTeam.baseStatus = blueBase.status;
+        const OutpostData &redOutpost = m_gameData->getRedOutpost();
+        const OutpostData &blueOutpost = m_gameData->getBlueOutpost();
+        snapshot.redTeam.outpostHealth = redOutpost.currentHP;
+        snapshot.redTeam.outpostMaxHealth = redOutpost.maxHP;
+        snapshot.redTeam.outpostStatus = redOutpost.status;
+        snapshot.blueTeam.outpostHealth = blueOutpost.currentHP;
+        snapshot.blueTeam.outpostMaxHealth = blueOutpost.maxHP;
+        snapshot.blueTeam.outpostStatus = blueOutpost.status;
+    }
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
     snapshot.updatedAtMs = now;
 
@@ -198,6 +279,7 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) const {
         snapshot.redTeam.robots.append(buildRobot(true, slot));
     for (const int slot : slotIds)
         snapshot.blueTeam.robots.append(buildRobot(false, slot));
+    snapshot.events = m_events;
 
     const QList<MatchValidationIssue> issues = validateMatchSnapshot(snapshot);
     if (hasMatchValidationError(issues)) {
@@ -206,6 +288,27 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) const {
         return {};
     }
     return snapshot;
+}
+
+void GameDataMatchSource::appendEvent(const QString &type,
+                                      const QString &message,
+                                      bool hasSide,
+                                      MatchSide side,
+                                      int robotSlot) {
+    if (message.trimmed().isEmpty())
+        return;
+    m_events.append(MatchEventSnapshot{
+        m_nextEventSequence++,
+        QDateTime::currentMSecsSinceEpoch(),
+        type,
+        message,
+        hasSide,
+        side,
+        robotSlot,
+    });
+    while (m_events.size() > 64)
+        m_events.removeFirst();
+    refresh();
 }
 
 } // namespace RM
