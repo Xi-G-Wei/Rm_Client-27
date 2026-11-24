@@ -455,6 +455,18 @@ QString matchWheelLegModeLabel(MatchWheelLegMode mode) {
     return QStringLiteral("未知");
 }
 
+QString matchTelemetryScopeKey(MatchTelemetryScope scope) {
+    return scope == MatchTelemetryScope::Private
+        ? QStringLiteral("private")
+        : QStringLiteral("public");
+}
+
+QString matchTelemetryScopeLabel(MatchTelemetryScope scope) {
+    return scope == MatchTelemetryScope::Private
+        ? QStringLiteral("己方内部遥测")
+        : QStringLiteral("公开数据");
+}
+
 QVariantMap MatchEnergySnapshot::toVariantMap() const {
     return {
         {QStringLiteral("superCapPercent"), superCapPercent},
@@ -515,6 +527,10 @@ QVariantMap MatchRobotSnapshot::toVariantMap() const {
         {QStringLiteral("side"), matchSideKey(side)},
         {QStringLiteral("role"), matchRobotRoleKey(role)},
         {QStringLiteral("roleLabel"), matchRobotRoleLabel(role)},
+        {QStringLiteral("telemetryScope"),
+         matchTelemetryScopeKey(telemetryScope)},
+        {QStringLiteral("telemetryScopeLabel"),
+         matchTelemetryScopeLabel(telemetryScope)},
         {QStringLiteral("health"), health},
         {QStringLiteral("maxHealth"), maxHealth},
         {QStringLiteral("ammo"), ammo},

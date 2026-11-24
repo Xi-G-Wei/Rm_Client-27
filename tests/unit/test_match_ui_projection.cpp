@@ -22,6 +22,19 @@ QVariantMap firstRobot(const QVariantMap &dashboard,
         .toMap();
 }
 
+QVariantMap findRobot(const QVariantMap &dashboard,
+                      const QString &teamKey,
+                      const QString &id) {
+    const QVariantList robots = dashboard.value(teamKey).toList();
+    for (const QVariant &entry : robots) {
+        const QVariantMap robot = entry.toMap();
+        if (robot.value(QStringLiteral("id")).toString() == id) {
+            return robot;
+        }
+    }
+    return {};
+}
+
 } // namespace
 
 class TestMatchUiProjection : public QObject {
@@ -122,6 +135,32 @@ private slots:
         QVERIFY(source.advanceByMs(40000));
         QCOMPARE(projection.superCapEnergy(), 25.0);
         QCOMPARE(projection.chassisStatus(), QStringLiteral("小陀螺 · 97 W"));
+    }
+
+    void publicEnemyTelemetryHidesPrivateFields() {
+        RM::MockMatchSource source;
+        QVERIFY(source.loadFromFile(scenarioPath()));
+        RM::MatchUiProjection projection(source.matchSession());
+        const QVariantMap dashboard = projection.dashboardData();
+
+        const QVariantMap enemy = findRobot(dashboard,
+                                            QStringLiteral("blueRobots"),
+                                            QStringLiteral("blue-3"));
+        QCOMPARE(enemy.value(QStringLiteral("telemetryScope")).toString(),
+                 QStringLiteral("public"));
+        QVERIFY(!enemy.contains(QStringLiteral("energy")));
+        QVERIFY(!enemy.contains(QStringLiteral("chassis")));
+        QVERIFY(!enemy.contains(QStringLiteral("wheelLeg")));
+        QVERIFY(!enemy.contains(QStringLiteral("ammo")));
+        QVERIFY(!enemy.contains(QStringLiteral("heat")));
+
+        const QVariantMap ally = findRobot(dashboard,
+                                           QStringLiteral("redRobots"),
+                                           QStringLiteral("red-3"));
+        QCOMPARE(ally.value(QStringLiteral("telemetryScope")).toString(),
+                 QStringLiteral("private"));
+        QVERIFY(ally.contains(QStringLiteral("energy")));
+        QVERIFY(ally.contains(QStringLiteral("wheelLeg")));
     }
 
     void offlineScenarioMarksOperatorVehicleDisconnected() {

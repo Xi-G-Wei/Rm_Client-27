@@ -56,6 +56,11 @@ enum class MatchWheelLegMode {
     Balance,
 };
 
+enum class MatchTelemetryScope {
+    Public,
+    Private,
+};
+
 QString matchPhaseKey(MatchPhase phase);
 QString matchPhaseLabel(MatchPhase phase);
 QString matchSideKey(MatchSide side);
@@ -67,6 +72,8 @@ QString matchChassisDriveTypeKey(MatchChassisDriveType type);
 QString matchChassisDriveTypeLabel(MatchChassisDriveType type);
 QString matchWheelLegModeKey(MatchWheelLegMode mode);
 QString matchWheelLegModeLabel(MatchWheelLegMode mode);
+QString matchTelemetryScopeKey(MatchTelemetryScope scope);
+QString matchTelemetryScopeLabel(MatchTelemetryScope scope);
 
 // -1 表示未知值，不能直接当成 0 显示给操作手。
 constexpr int kUnknownMatchMetric = -1;
@@ -122,6 +129,7 @@ struct MatchRobotSnapshot {
     int slot = 0;
     MatchSide side = MatchSide::Red;
     MatchRobotRole role = MatchRobotRole::Unknown;
+    MatchTelemetryScope telemetryScope = MatchTelemetryScope::Public;
     int health = kUnknownMatchMetric;
     int maxHealth = kUnknownMatchMetric;
     int ammo = kUnknownMatchMetric;

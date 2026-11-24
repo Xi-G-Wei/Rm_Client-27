@@ -36,19 +36,22 @@ QString robotName(const MatchRobotSnapshot &robot) {
 }
 
 QVariantMap robotCard(const MatchRobotSnapshot &robot) {
+    const bool privateTelemetry =
+        robot.telemetryScope == MatchTelemetryScope::Private;
     QVariantMap card{
         {QStringLiteral("number"), robot.slot},
         {QStringLiteral("id"), robot.id},
         {QStringLiteral("name"), robotName(robot)},
         {QStringLiteral("role"), matchRobotRoleKey(robot.role)},
         {QStringLiteral("roleLabel"), matchRobotRoleLabel(robot.role)},
+        {QStringLiteral("telemetryScope"),
+         matchTelemetryScopeKey(robot.telemetryScope)},
+        {QStringLiteral("telemetryScopeLabel"),
+         matchTelemetryScopeLabel(robot.telemetryScope)},
         {QStringLiteral("selected"), false},
         {QStringLiteral("online"), robot.online},
         {QStringLiteral("alive"), robot.alive},
         {QStringLiteral("effects"), QVariantList{}},
-        {QStringLiteral("energy"), robot.energy.toVariantMap()},
-        {QStringLiteral("chassis"), robot.chassis.toVariantMap()},
-        {QStringLiteral("wheelLeg"), robot.wheelLeg.toVariantMap()},
     };
 
     if (robot.health != kUnknownMatchMetric) {
@@ -57,26 +60,31 @@ QVariantMap robotCard(const MatchRobotSnapshot &robot) {
     if (robot.maxHealth > 0) {
         card.insert(QStringLiteral("maxHp"), robot.maxHealth);
     }
-    if (robot.ammo != kUnknownMatchMetric) {
+    if (privateTelemetry && robot.ammo != kUnknownMatchMetric) {
         card.insert(QStringLiteral("ammo"), robot.ammo);
         card.insert(QStringLiteral("ammoPeak"), robot.ammo);
     }
-    if (robot.heat != kUnknownMatchMetric) {
+    if (privateTelemetry && robot.heat != kUnknownMatchMetric) {
         card.insert(QStringLiteral("heat"), robot.heat);
     }
-    if (robot.heatLimit > 0) {
+    if (privateTelemetry && robot.heatLimit > 0) {
         card.insert(QStringLiteral("maxHeat"), robot.heatLimit);
         card.insert(QStringLiteral("heatLimit"), robot.heatLimit);
     }
-    if (robot.energy.chassisPowerLimitW >= 0.0) {
-        card.insert(QStringLiteral("maxPower"),
-                    robot.energy.chassisPowerLimitW);
-    }
-    if (!robot.alive && robot.respawnRemainingSec >= 0) {
+    if (privateTelemetry && !robot.alive && robot.respawnRemainingSec >= 0) {
         card.insert(QStringLiteral("respawnLeft"),
                     robot.respawnRemainingSec);
         card.insert(QStringLiteral("respawnTotal"),
                     qMax(1, robot.respawnRemainingSec));
+    }
+    if (privateTelemetry) {
+        card.insert(QStringLiteral("energy"), robot.energy.toVariantMap());
+        card.insert(QStringLiteral("chassis"), robot.chassis.toVariantMap());
+        card.insert(QStringLiteral("wheelLeg"), robot.wheelLeg.toVariantMap());
+    }
+    if (privateTelemetry && robot.energy.chassisPowerLimitW >= 0.0) {
+        card.insert(QStringLiteral("maxPower"),
+                    robot.energy.chassisPowerLimitW);
     }
     if (robot.hasPosition) {
         card.insert(QStringLiteral("x"), robot.mapX);

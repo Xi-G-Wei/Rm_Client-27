@@ -127,13 +127,16 @@ Item {
                 text: "血量 "
                     + (root.selectedCard.hp ?? "—") + " / "
                     + (root.selectedCard.maxHp ?? "—")
-                    + "    超电 "
-                    + (root.selectedCard.energy?.superCapPercent >= 0
-                        ? Math.round(root.selectedCard.energy.superCapPercent) + "%" : "—")
+                    + (root.selectedCard.telemetryScope === "private"
+                        ? "    超电 "
+                            + (root.selectedCard.energy?.superCapPercent >= 0
+                                ? Math.round(root.selectedCard.energy.superCapPercent) + "%" : "—")
+                        : "")
                 color: "#e8f1f6"
                 font.pixelSize: 12
             }
             Text {
+                visible: root.selectedCard.telemetryScope === "private"
                 text: "功率 "
                     + (root.selectedCard.energy?.chassisPowerW >= 0
                         ? Math.round(root.selectedCard.energy.chassisPowerW) + " W" : "—")
@@ -143,11 +146,18 @@ Item {
                 font.pixelSize: 11
             }
             Text {
+                visible: root.selectedCard.telemetryScope === "private"
                 text: "驱动 "
                     + (root.selectedCard.chassis?.driveTypeLabel || "—")
                     + (root.selectedCard.wheelLeg?.telemetryAvailable
                         ? " · " + (root.selectedCard.wheelLeg?.modeLabel || "未知") : "")
                 color: "#a8c8d7"
+                font.pixelSize: 11
+            }
+            Text {
+                visible: root.selectedCard.telemetryScope !== "private"
+                text: "仅显示官方公开数据"
+                color: "#9fb7c6"
                 font.pixelSize: 11
             }
             Text {

@@ -284,6 +284,9 @@ bool parseRobot(const QJsonObject &object,
                 MatchRobotSnapshot *robot,
                 QString *error) {
     robot->side = side;
+    robot->telemetryScope = side == MatchSide::Red
+        ? MatchTelemetryScope::Private
+        : MatchTelemetryScope::Public;
     QString role;
     QString phaseText;
     if (!requireString(object, QStringLiteral("id"), path, &robot->id, error) ||
