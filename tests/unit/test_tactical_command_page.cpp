@@ -712,6 +712,14 @@ private slots:
     QVERIFY(source.setTriggerHeld(true));
     QVERIFY(source.advanceByMs(2000));
     QTRY_VERIFY(hud->property("isOverheated").toBool());
+    QObject *warning = hud->findChild<QObject *>(
+        QStringLiteral("heatOverLimitWarning"));
+    QVERIFY(warning);
+    QTRY_VERIFY(warning->property("visible").toBool());
+    QCOMPARE(warning->property("text").toString(),
+             QStringLiteral("枪口热量超限，射击锁定"));
+    QVERIFY(!warning->property("text").toString().contains(
+        QStringLiteral("图传")));
     QVERIFY(source.setTriggerHeld(false));
   }
 };

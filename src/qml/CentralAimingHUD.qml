@@ -196,10 +196,11 @@ Item {
 
             Text {
                 id: overheatWarningText
+                objectName: "heatOverLimitWarning"
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.top
                 anchors.bottomMargin: 10
-                text: "热量超限，图传断开"
+                text: "枪口热量超限，射击锁定"
                 visible: root.isOverheated
                 color: "#FF4747"
                 font.pixelSize: 18
@@ -469,73 +470,6 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
-                }
-            }
-        }
-    }
-
-    // --- 超级电容能量条 (右侧中部) ---
-    Rectangle {
-        id: superCapPanel
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: 50
-        width: 160
-        height: 50
-        color: "#1A1A1A"
-        opacity: 0.85
-        border.color: "#00CED1"
-        border.width: 1
-        radius: 4
-        visible: root.customData.superCapEnergy !== undefined && root.customData.superCapEnergy > 0
-
-        Column {
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: 6
-
-            Text {
-                text: "SUPER CAPACITOR"
-                color: "#00CED1"
-                font.pixelSize: 10
-                font.bold: true
-            }
-
-            // 能量条
-            Rectangle {
-                width: parent.width
-                height: 16
-                color: "#333333"
-                radius: 8
-
-                Rectangle {
-                    width: parent.width * (Math.min(root.customData.superCapEnergy, 100) / 100.0)
-                    height: parent.height
-                    radius: 8
-                    color: {
-                        var pct = root.customData.superCapEnergy;
-                        if (pct > 60) return "#00FF00";
-                        if (pct > 30) return "#FFFF00";
-                        return "#FF0000";
-                    }
-
-                    // 低电量闪烁
-                    SequentialAnimation on opacity {
-                        running: root.customData.superCapEnergy < 30
-                        loops: Animation.Infinite
-                        NumberAnimation { to: 0.5; duration: 300 }
-                        NumberAnimation { to: 1.0; duration: 300 }
-                    }
-                }
-
-                // 百分比文字
-                Text {
-                    anchors.centerIn: parent
-                    text: Math.round(root.customData.superCapEnergy) + "%"
-                    color: "white"
-                    font.pixelSize: 10
-                    font.bold: true
                 }
             }
         }
