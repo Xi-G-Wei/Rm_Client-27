@@ -268,10 +268,9 @@ python3 -m unittest discover -s tools/release/tests -p 'test_*.py' -v
 
 ### 必读入口
 
-1. [贡献指南](../CONTRIBUTING.md)：Issue、PR、安全和素材要求；
-2. [编码与提交约定](development/coding-style.md)：中文注释、Qt/C++、Python、QML 和提交习惯；
-3. [测试与质量门](architecture/testing.md)：按修改范围选择验证；
-4. [架构总览](architecture/overview.md)：确认依赖方向和模块边界。
+1. [编码与提交约定](development/coding-style.md)：中文注释、Qt/C++、Python、QML 和提交习惯；
+2. [测试与质量门](architecture/testing.md)：按修改范围选择验证；
+3. [架构总览](architecture/overview.md)：确认依赖方向和模块边界。
 
 普通贡献流程只需要 Git、CMake、CTest、Python 和项目依赖。建议先从文档修正、独立纯
 逻辑、现有测试补充或边界清晰的小缺陷开始。
