@@ -88,7 +88,7 @@ void ConfigManager::onFileChanged(const QString &path) {
 
 QString ConfigManager::getMatchProfile() const {
   return getEnvOrConfigString("RM_MATCH_PROFILE", "competition", "profile",
-                              "legacy2026");
+                              "rmul3v3");
 }
 
 QString ConfigManager::getAppName() const {

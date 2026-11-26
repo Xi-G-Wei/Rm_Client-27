@@ -22,7 +22,7 @@
         "status_disconnected": "未连接"
     },
     "competition": {
-        "profile": "rmuc2027",
+        "profile": "rmul3v3",
         "mqtt_broker": "127.0.0.1",
         "mqtt_port": 3333
     },
