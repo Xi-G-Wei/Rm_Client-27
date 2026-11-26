@@ -64,8 +64,8 @@ private slots:
         QCOMPARE(health.level, RM::MatchDataHealthLevel::Fresh);
         QCOMPARE(health.onlineRobots, 6);
         QCOMPARE(health.offlineRobots, 0);
-        QCOMPARE(health.publicRobots, 3);
-        QCOMPARE(health.privateRobots, 3);
+        QCOMPARE(health.publicRobots, 5);
+        QCOMPARE(health.privateRobots, 1);
         QCOMPARE(health.unknownFieldCount, 0);
 
         RM::MatchSnapshot stale = snapshot;
@@ -119,9 +119,16 @@ private slots:
         QCOMPARE(restored.redTeam.robots.first().energy.superCapPercent,
                  original.redTeam.robots.first().energy.superCapPercent);
         QCOMPARE(restored.redTeam.robots.first().telemetryScope,
+                 RM::MatchTelemetryScope::Public);
+        QCOMPARE(restored.operatorRobotId, QStringLiteral("red-3"));
+        QCOMPARE(restored.redTeam.robots[1].telemetryScope,
                  RM::MatchTelemetryScope::Private);
         QCOMPARE(restored.blueTeam.robots.first().telemetryScope,
                  RM::MatchTelemetryScope::Public);
+        QCOMPARE(restored.redTeam.robots[1].moduleStates.size(), 10);
+        QCOMPARE(restored.redTeam.robots[1].moduleStates[2].toInt(), 1);
+        QVERIFY(restored.redTeam.robots[1].buffTimedData.contains(
+            QStringLiteral("attack")));
 
         RM::MatchSnapshot extended = original;
         extended.redTeam.economy = 1200;
@@ -129,11 +136,18 @@ private slots:
         extended.redTeam.controlPoints = 8;
         extended.blueTeam.controlPoints = 7;
         extended.redTeam.totalDamage = 2500;
+        extended.isPaused = true;
+        extended.operatorRobotId = QStringLiteral("blue-3");
         RM::MatchSnapshot extendedRestored;
         QVERIFY(RM::matchSnapshotFromJson(
             RM::matchSnapshotToJson(extended), &extendedRestored, &error));
         QCOMPARE(extendedRestored.redTeam.economy, 1200);
         QCOMPARE(extendedRestored.blueTeam.controlPoints, 7);
+        QVERIFY(extendedRestored.isPaused);
+        QCOMPARE(extendedRestored.operatorRobotId,
+                 QStringLiteral("blue-3"));
+        QCOMPARE(extendedRestored.blueTeam.robots[1].telemetryScope,
+                 RM::MatchTelemetryScope::Private);
     }
 
     void recordedMatchCanBeReplayed() {
@@ -193,19 +207,34 @@ private slots:
         gameData.setMatchProfile(RM::MatchProfile::Rmul3v3);
         gameData.setCurrentRobotId(3);
         gameData.updateGameStateFromS1(
-            static_cast<int>(GameStage::BATTLE), 300, 2, 1, 1, false);
+            static_cast<int>(GameStage::BATTLE), 300, 2, 1, 1, true);
         RobotData &current = gameData.getRobotDataRef(3);
         current.currentHP = 320;
         current.maxHP = 400;
         current.currentHeat = 45;
         current.heatLimit = 200;
+        current.level = 3;
+        current.experience = 750;
+        current.maxExperience = 1000;
         current.allowedAmmo17mm = 80;
         current.bufferEnergy = 42;
         current.maxBufferEnergy = 60;
         current.superCapEnergyPercent = 72.5f;
+        current.muzzleVelocity = 24.0f;
+        current.shootSpeedLimit = 30.0f;
+        current.isOutOfCombat = false;
+        current.fricEnabled = true;
+        current.rammerEnabled = true;
+        current.buffs.attack.level = 1;
+        current.buffs.attack.maxTime = 10;
+        current.buffs.attack.leftTimeAtSync = 6;
         current.status = RobotStatus::NORMAL;
         current.isClientConnected = true;
         current.lastUpdateTime = QDateTime::currentDateTime();
+        robomaster::RobotModuleStatus modules;
+        modules.set_rfid(1);
+        modules.set_video_transmission(1);
+        gameData.updateRobotModuleStatus(modules);
         gameData.setRedEconomy(1200);
         gameData.setBlueEconomy(900);
         DamageEventData damage{};
@@ -224,16 +253,32 @@ private slots:
         const RM::MatchSnapshot snapshot =
             source.matchSession()->matchSnapshot();
         QCOMPARE(snapshot.phase, RM::MatchPhase::Battle);
+        QVERIFY(snapshot.isPaused);
         QCOMPARE(snapshot.timeRemainingSec, 300);
         QCOMPARE(snapshot.redTeam.robots.size(), 3);
         QCOMPARE(snapshot.blueTeam.robots.size(), 3);
+        QCOMPARE(snapshot.operatorRobotId, QStringLiteral("red-3"));
         QCOMPARE(snapshot.redTeam.robots[1].id, QStringLiteral("red-3"));
         QCOMPARE(snapshot.redTeam.robots[1].telemetryScope,
                  RM::MatchTelemetryScope::Private);
         QCOMPARE(snapshot.blueTeam.robots[1].telemetryScope,
                  RM::MatchTelemetryScope::Public);
         QCOMPARE(snapshot.redTeam.robots[1].health, 320);
+        QCOMPARE(snapshot.redTeam.robots[1].level, 3);
+        QCOMPARE(snapshot.redTeam.robots[1].experience, 750);
+        QCOMPARE(snapshot.redTeam.robots[1].maxExperience, 1000);
+        QCOMPARE(snapshot.redTeam.robots[1].muzzleVelocityMps, 24.0);
+        QCOMPARE(snapshot.redTeam.robots[1].shootSpeedLimitMps, 30.0);
+        QVERIFY(!snapshot.redTeam.robots[1].outOfCombat);
         QCOMPARE(snapshot.redTeam.robots[1].energy.superCapPercent, 72.5);
+        QCOMPARE(snapshot.redTeam.robots[1].moduleStates[3].toInt(), 0);
+        QCOMPARE(snapshot.redTeam.robots[1].moduleStates[4].toInt(), 0);
+        QVERIFY(snapshot.redTeam.robots[1].buffTimedData.contains(
+            QStringLiteral("attack")));
+        QCOMPARE(snapshot.redTeam.robots[1]
+                     .customData.value(QStringLiteral("fricEnabled"))
+                     .toBool(),
+                 true);
         QCOMPARE(snapshot.redTeam.economy, 1200);
         QCOMPARE(snapshot.blueTeam.economy, 900);
         QCOMPARE(snapshot.redTeam.totalDamage, 250);

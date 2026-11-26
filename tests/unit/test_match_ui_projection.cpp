@@ -2,6 +2,7 @@
 #include "ui/MatchUiProjection.h"
 
 #include <QDir>
+#include <QFile>
 #include <QVariantList>
 #include <QVariantMap>
 #include <QtTest>
@@ -65,12 +66,17 @@ private slots:
         QCOMPARE(redHeavy.value(QStringLiteral("number")).toInt(), 1);
         QCOMPARE(redHeavy.value(QStringLiteral("name")).toString(),
                  QStringLiteral("重装"));
+        QCOMPARE(redHeavy.value(QStringLiteral("telemetryScope")).toString(),
+                 QStringLiteral("public"));
+        const QVariantMap operatorRobot =
+            findRobot(dashboard, QStringLiteral("redRobots"),
+                      QStringLiteral("red-3"));
         const QVariantMap energy =
-            redHeavy.value(QStringLiteral("energy")).toMap();
+            operatorRobot.value(QStringLiteral("energy")).toMap();
         QCOMPARE(energy.value(QStringLiteral("superCapPercent")).toDouble(),
-                 82.0);
+                 74.0);
         const QVariantMap chassis =
-            redHeavy.value(QStringLiteral("chassis")).toMap();
+            operatorRobot.value(QStringLiteral("chassis")).toMap();
         QCOMPARE(chassis.value(QStringLiteral("driveTypeLabel")).toString(),
                  QStringLiteral("轮腿"));
     }
@@ -125,14 +131,33 @@ private slots:
         RM::MatchUiProjection projection(source.matchSession());
 
         QCOMPARE(projection.robotId(), 3);
+        QCOMPARE(projection.robotLevel(), 3);
+        QCOMPARE(projection.currentExp(), 68);
+        QCOMPARE(projection.maxExp(), 100);
         QCOMPARE(projection.currentHealth(), 400);
         QCOMPARE(projection.maxHealth(), 400);
         QCOMPARE(projection.bufferEnergy(), 40);
         QCOMPARE(projection.maxBufferEnergy(), 60);
         QCOMPARE(projection.superCapEnergy(), 74.0);
-        QCOMPARE(projection.chassisStatus(), QStringLiteral("普通 · 55 W"));
+        QCOMPARE(projection.chassisStatus(),
+                 QStringLiteral("普通 · 55 W · 平衡"));
         QCOMPARE(projection.moduleStates().size(), 10);
         QCOMPARE(projection.moduleData().size(), 10);
+        QCOMPARE(projection.moduleStates().first().toInt(), 0);
+        QCOMPARE(projection.moduleStates().at(2).toInt(), 1);
+        QVERIFY(projection.buffTimedData()
+                    .value(QStringLiteral("attack"))
+                    .toMap()
+                    .value(QStringLiteral("level"))
+                    .toInt() > 0);
+        QCOMPARE(projection.territoryStatus()
+                     .value(QStringLiteral("redPoints"))
+                     .toInt(),
+                 48);
+        QCOMPARE(projection.territoryStatus()
+                     .value(QStringLiteral("bluePoints"))
+                     .toInt(),
+                 52);
         QVERIFY(projection.myRobot()
                     .value(QStringLiteral("isClientConnected"))
                     .toBool());
@@ -140,7 +165,12 @@ private slots:
         QVERIFY(source.start());
         QVERIFY(source.advanceByMs(40000));
         QCOMPARE(projection.superCapEnergy(), 25.0);
-        QCOMPARE(projection.chassisStatus(), QStringLiteral("小陀螺 · 97 W"));
+        QCOMPARE(projection.chassisStatus(),
+                 QStringLiteral("小陀螺 · 97 W · 切换中"));
+        QVERIFY(source.pause());
+        QVERIFY(projection.isPaused());
+        QVERIFY(source.resume());
+        QVERIFY(!projection.isPaused());
     }
 
     void publicEnemyTelemetryHidesPrivateFields() {
@@ -167,6 +197,42 @@ private slots:
                  QStringLiteral("private"));
         QVERIFY(ally.contains(QStringLiteral("energy")));
         QVERIFY(ally.contains(QStringLiteral("wheelLeg")));
+    }
+
+    void blueOperatorSelectionUsesBlueTeamAsAlly() {
+        QFile file(scenarioPath());
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        QByteArray json = file.readAll();
+        json.replace("\"operatorRobotId\": \"red-3\"",
+                     "\"operatorRobotId\": \"blue-3\"");
+
+        RM::MockMatchSource source;
+        QVERIFY2(source.loadFromJson(json, QStringLiteral("blue-operator")),
+                 qPrintable(source.lastError()));
+        RM::MatchUiProjection projection(source.matchSession());
+
+        QCOMPARE(projection.myRobot()
+                     .value(QStringLiteral("isRedTeam"))
+                     .toBool(),
+                 false);
+        QCOMPARE(projection.robotId(), 3);
+        QCOMPARE(projection.superCapEnergy(), 69.0);
+        const QVariantList allies = projection.allyRobotList();
+        QCOMPARE(allies.size(), 3);
+        for (const QVariant &entry : allies) {
+            QVERIFY(entry.toMap()
+                        .value(QStringLiteral("id"))
+                        .toString()
+                        .startsWith(QStringLiteral("blue-")));
+        }
+        const QVariantList enemies = projection.enemyRobotList();
+        QCOMPARE(enemies.size(), 3);
+        for (const QVariant &entry : enemies) {
+            QVERIFY(entry.toMap()
+                        .value(QStringLiteral("id"))
+                        .toString()
+                        .startsWith(QStringLiteral("red-")));
+        }
     }
 
     void offlineScenarioMarksOperatorVehicleDisconnected() {

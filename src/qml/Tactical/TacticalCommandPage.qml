@@ -49,7 +49,9 @@ Rectangle {
     readonly property var resources: root.dataSource.resourceData || mockData.resourceData
     readonly property var topStatus: root.dataSource.topStatusData || mockData.topStatusData
     readonly property var linkHealth: root.dataSource.linkHealth || mockData.linkHealth
-    readonly property bool allyIsRed: root.uiFirstMode ? true : root.gameDataContext ? (
+    readonly property bool allyIsRed: root.uiFirstMode
+        ? Boolean(root.matchUiContext?.myRobot?.isRedTeam ?? true)
+        : root.gameDataContext ? (
         root.gameDataContext.myRobot && root.gameDataContext.myRobot.isRedTeam !== undefined
             ? Boolean(root.gameDataContext.myRobot.isRedTeam)
             : Number(root.gameDataContext.currentRobotId || 1) < 100
@@ -85,6 +87,15 @@ Rectangle {
         && root.dataSource.enemyRobotList.length > 0) ? root.dataSource.enemyRobotList : mockData.enemyRobotList
     readonly property var tacticalMapModel: root.dataSource.mapData
         || root.dataSource.radarData || mockData.radarData
+    readonly property var tacticalTerritoryData: root.uiFirstMode
+        ? (root.matchUiContext?.territoryStatus || ({}))
+        : (root.gameDataContext?.territoryStatus || ({}))
+    readonly property var operatorBuffData: root.uiFirstMode
+        ? (root.matchUiContext?.buffTimedData || ({}))
+        : (root.gameDataContext?.buffTimedData || ({}))
+    readonly property int operatorRobotNumber: root.uiFirstMode
+        ? Number(root.matchUiContext?.robotId || 0)
+        : Number(root.gameDataContext?.currentRobotId || 0) % 100
     readonly property bool largeMapMode: root.mainWindowContext
         ? Boolean(root.mainWindowContext.tacticalLargeMapMode) : false
     readonly property bool largeMapOverlayReady: tacticalLargeMapLoader.active

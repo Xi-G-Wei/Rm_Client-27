@@ -8,9 +8,13 @@
     "phase": "preparation",
     "timeRemainingSec": 5,
     "round": 1,
+    "operatorRobotId": "red-3",
+    "isPaused": false,
     "redTeam": {
       "name": "红方",
       "score": 0,
+      "controlPoints": 48,
+      "totalDamage": 1280,
       "robots": [
         {
           "id": "red-1",
@@ -61,8 +65,17 @@
           "ammo": 150,
           "heat": 10,
           "heatLimit": 200,
+          "level": 3,
+          "experience": 68,
+          "maxExperience": 100,
+          "yellowCardCount": 0,
+          "muzzleVelocityMps": 23.5,
+          "shootSpeedLimitMps": 30.0,
+          "speedLockState": 0,
+          "speedLockSeconds": 0,
           "online": true,
           "alive": true,
+          "outOfCombat": false,
           "respawnRemainingSec": 0,
           "energy": {
             "superCapPercent": 74.0,
@@ -92,6 +105,37 @@
               {"name": "left_hip", "angleDegrees": 12.0, "targetAngleDegrees": 15.0},
               {"name": "right_hip", "angleDegrees": -10.0, "targetAngleDegrees": -8.0}
             ]
+          },
+          "moduleStates": [0, 0, 1, 0, 0, 2, 0, 0, 0, 0],
+          "moduleData": [
+            {"online": true, "state": 0},
+            {"online": true, "state": 0},
+            {"online": false, "state": 1},
+            {"online": true, "state": 0},
+            {"online": true, "state": 0},
+            {"online": false, "state": 2},
+            {"online": true, "state": 0},
+            {"online": true, "state": 0},
+            {"online": true, "state": 0},
+            {"online": true, "state": 0}
+          ],
+          "buffTimedData": {
+            "attack": {"type": 1, "level": 2, "maxTime": 15, "leftTime": 9},
+            "cooling": {"type": 3, "level": 1, "maxTime": 20, "leftTime": 14},
+            "recovery": {"type": 5, "level": 1, "maxTime": 10, "leftTime": 6}
+          },
+          "customData": {
+            "fricEnabled": true,
+            "rammerEnabled": false,
+            "chassisMode": 1,
+            "spinMode": false,
+            "followMode": true,
+            "chassisProtect": false,
+            "chassisWarning": false,
+            "superCapEnergy": 74,
+            "gimbalChassisAngle": 12.5,
+            "targetDistance": 12,
+            "ballisticCompensation": -2
           },
           "position": {"x": 0.3, "y": 0.4, "headingDegrees": 30.0}
         },
@@ -131,6 +175,8 @@
     "blueTeam": {
       "name": "蓝方",
       "score": 0,
+      "controlPoints": 52,
+      "totalDamage": 1170,
       "robots": [
         {
           "id": "blue-1",

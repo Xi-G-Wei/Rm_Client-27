@@ -284,9 +284,7 @@ bool parseRobot(const QJsonObject &object,
                 MatchRobotSnapshot *robot,
                 QString *error) {
     robot->side = side;
-    robot->telemetryScope = side == MatchSide::Red
-        ? MatchTelemetryScope::Private
-        : MatchTelemetryScope::Public;
+    robot->telemetryScope = MatchTelemetryScope::Public;
     QString role;
     QString phaseText;
     if (!requireString(object, QStringLiteral("id"), path, &robot->id, error) ||
@@ -315,6 +313,22 @@ bool parseRobot(const QJsonObject &object,
     }
     robot->online = object.value(QStringLiteral("online")).toBool(false);
     robot->alive = object.value(QStringLiteral("alive")).toBool(false);
+    robot->level = object.value(QStringLiteral("level")).toInt(-1);
+    robot->experience = object.value(QStringLiteral("experience")).toInt(-1);
+    robot->maxExperience =
+        object.value(QStringLiteral("maxExperience")).toInt(-1);
+    robot->yellowCardCount =
+        object.value(QStringLiteral("yellowCardCount")).toInt(0);
+    robot->muzzleVelocityMps =
+        object.value(QStringLiteral("muzzleVelocityMps")).toDouble(-1.0);
+    robot->shootSpeedLimitMps =
+        object.value(QStringLiteral("shootSpeedLimitMps")).toDouble(-1.0);
+    robot->speedLockState =
+        object.value(QStringLiteral("speedLockState")).toInt(0);
+    robot->speedLockSeconds =
+        object.value(QStringLiteral("speedLockSeconds")).toInt(0);
+    robot->outOfCombat =
+        object.value(QStringLiteral("outOfCombat")).toBool(robot->alive);
 
     const QJsonValue positionValue = object.value(QStringLiteral("position"));
     if (!positionValue.isUndefined() && !positionValue.isNull()) {
@@ -521,6 +535,16 @@ bool parseRobot(const QJsonObject &object,
             }
         }
     }
+    for (const QJsonValue &value :
+         object.value(QStringLiteral("moduleStates")).toArray()) {
+        robot->moduleStates.append(value.toInt(-1));
+    }
+    robot->moduleData =
+        object.value(QStringLiteral("moduleData")).toArray().toVariantList();
+    robot->buffTimedData =
+        object.value(QStringLiteral("buffTimedData")).toObject().toVariantMap();
+    robot->customData =
+        object.value(QStringLiteral("customData")).toObject().toVariantMap();
     return true;
 }
 
@@ -547,6 +571,26 @@ bool parseTeam(const QJsonObject &initial,
                     error)) {
         return false;
     }
+    team->economy = object.value(QStringLiteral("economy")).toInt(-1);
+    team->totalEconomyObtained =
+        object.value(QStringLiteral("totalEconomyObtained")).toInt(-1);
+    team->techLevel = object.value(QStringLiteral("techLevel")).toInt(-1);
+    team->encryptionLevel =
+        object.value(QStringLiteral("encryptionLevel")).toInt(-1);
+    team->baseHealth = object.value(QStringLiteral("baseHealth")).toInt(-1);
+    team->baseMaxHealth =
+        object.value(QStringLiteral("baseMaxHealth")).toInt(-1);
+    team->baseStatus = object.value(QStringLiteral("baseStatus")).toInt(-1);
+    team->outpostHealth =
+        object.value(QStringLiteral("outpostHealth")).toInt(-1);
+    team->outpostMaxHealth =
+        object.value(QStringLiteral("outpostMaxHealth")).toInt(-1);
+    team->outpostStatus =
+        object.value(QStringLiteral("outpostStatus")).toInt(-1);
+    team->controlPoints =
+        object.value(QStringLiteral("controlPoints")).toInt(-1);
+    team->totalDamage =
+        object.value(QStringLiteral("totalDamage")).toInt(-1);
     const QJsonArray robots =
         requireArray(object, QStringLiteral("robots"), path, error);
     if (!error->isEmpty()) {
@@ -617,6 +661,33 @@ bool parseInitialSnapshot(const QJsonObject &root,
         return false;
     }
     snapshot->profile = QStringLiteral("rmul3v3");
+    snapshot->isPaused =
+        initial.value(QStringLiteral("isPaused")).toBool(false);
+    snapshot->operatorRobotId =
+        initial.value(QStringLiteral("operatorRobotId"))
+            .toString(QStringLiteral("red-3"));
+    bool operatorFound = false;
+    for (MatchRobotSnapshot &robot : snapshot->redTeam.robots) {
+        robot.telemetryScope =
+            robot.id == snapshot->operatorRobotId
+                ? MatchTelemetryScope::Private
+                : MatchTelemetryScope::Public;
+        operatorFound = operatorFound ||
+            robot.telemetryScope == MatchTelemetryScope::Private;
+    }
+    for (MatchRobotSnapshot &robot : snapshot->blueTeam.robots) {
+        robot.telemetryScope =
+            robot.id == snapshot->operatorRobotId
+                ? MatchTelemetryScope::Private
+                : MatchTelemetryScope::Public;
+        operatorFound = operatorFound ||
+            robot.telemetryScope == MatchTelemetryScope::Private;
+    }
+    if (!operatorFound) {
+        return fail(error,
+                    QStringLiteral("initial.operatorRobotId"),
+                    QStringLiteral("操作机器人 ID 不存在"));
+    }
     return true;
 }
 
@@ -1193,6 +1264,7 @@ bool MockMatchSource::pause() {
     }
     d->paused = true;
     m_timer.stop();
+    updateSnapshotPausedState(true);
     markStateChanged();
     return true;
 }
@@ -1206,6 +1278,7 @@ bool MockMatchSource::resume() {
     m_wallClock.start();
     m_lastWallClockMs = 0;
     m_timer.start();
+    updateSnapshotPausedState(false);
     markStateChanged();
     return true;
 }
@@ -1360,6 +1433,7 @@ bool MockMatchSource::advanceByMs(qint64 elapsedMs) {
             d->paused = false;
             d->completed = true;
             m_timer.stop();
+            updateSnapshotPausedState(false);
             markStateChanged();
             emit scenarioCompleted();
             break;
@@ -1371,10 +1445,28 @@ bool MockMatchSource::advanceByMs(qint64 elapsedMs) {
 bool MockMatchSource::fireImmediateShot() {
     MatchSnapshot snapshot = m_session->matchSnapshot();
     MatchRobotSnapshot *robot = nullptr;
-    for (MatchRobotSnapshot &candidate : snapshot.redTeam.robots) {
-        if (candidate.slot == 3) {
-            robot = &candidate;
-            break;
+    const auto findOperator = [&snapshot](
+                                  QList<MatchRobotSnapshot> &robots)
+        -> MatchRobotSnapshot * {
+        for (MatchRobotSnapshot &candidate : robots) {
+            if (candidate.id == snapshot.operatorRobotId ||
+                (snapshot.operatorRobotId.isEmpty() &&
+                 candidate.telemetryScope == MatchTelemetryScope::Private)) {
+                return &candidate;
+            }
+        }
+        return nullptr;
+    };
+    robot = findOperator(snapshot.redTeam.robots);
+    if (!robot) {
+        robot = findOperator(snapshot.blueTeam.robots);
+    }
+    if (!robot) {
+        for (MatchRobotSnapshot &candidate : snapshot.redTeam.robots) {
+            if (candidate.slot == 3) {
+                robot = &candidate;
+                break;
+            }
         }
     }
     if (!robot || !robot->online || !robot->alive
@@ -1399,9 +1491,25 @@ bool MockMatchSource::applyLocalCombatStep(double virtualMs) {
     MatchSnapshot snapshot = m_session->matchSnapshot();
     MatchRobotSnapshot *robot = nullptr;
     for (MatchRobotSnapshot &candidate : snapshot.redTeam.robots) {
-        if (candidate.slot == 3) {
+        if (candidate.id == snapshot.operatorRobotId) {
             robot = &candidate;
             break;
+        }
+    }
+    if (!robot) {
+        for (MatchRobotSnapshot &candidate : snapshot.blueTeam.robots) {
+            if (candidate.id == snapshot.operatorRobotId) {
+                robot = &candidate;
+                break;
+            }
+        }
+    }
+    if (!robot) {
+        for (MatchRobotSnapshot &candidate : snapshot.redTeam.robots) {
+            if (candidate.slot == 3) {
+                robot = &candidate;
+                break;
+            }
         }
     }
     if (!robot)
@@ -1493,6 +1601,7 @@ bool MockMatchSource::applyActionsAtElapsedSecond(int elapsedSec) {
 
 void MockMatchSource::initializeScenarioSnapshot() {
     MatchSnapshot snapshot = d->initial;
+    snapshot.isPaused = d->paused;
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
     snapshot.updatedAtMs = now;
     for (MatchRobotSnapshot &robot : snapshot.redTeam.robots) {
@@ -1507,6 +1616,22 @@ void MockMatchSource::initializeScenarioSnapshot() {
         return;
     }
     applyActionsAtElapsedSecond(0);
+}
+
+void MockMatchSource::updateSnapshotPausedState(bool paused) {
+    if (!m_session || !m_session->isValid()) {
+        return;
+    }
+    MatchSnapshot snapshot = m_session->matchSnapshot();
+    if (snapshot.isPaused == paused) {
+        return;
+    }
+    snapshot.isPaused = paused;
+    snapshot.updatedAtMs = QDateTime::currentMSecsSinceEpoch();
+    QString error;
+    if (!m_session->replaceSnapshot(snapshot, &error)) {
+        reportError(error);
+    }
 }
 
 void MockMatchSource::clearError() {

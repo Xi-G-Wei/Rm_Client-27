@@ -13,27 +13,69 @@ MatchRobotRole roleForSlot(int slot) {
     return slot == 1 ? MatchRobotRole::Heavy : MatchRobotRole::Infantry;
 }
 
+MatchRobotRole roleForType(RobotType type, int slot) {
+    switch (type) {
+    case RobotType::HERO: return MatchRobotRole::Heavy;
+    case RobotType::ENGINEER: return MatchRobotRole::Engineer;
+    case RobotType::AERIAL: return MatchRobotRole::Aerial;
+    case RobotType::SENTRY: return MatchRobotRole::Sentry;
+    case RobotType::INFANTRY_3:
+    case RobotType::INFANTRY_4:
+    case RobotType::INFANTRY_5:
+        return MatchRobotRole::Infantry;
+    default:
+        return roleForSlot(slot);
+    }
+}
+
 } // namespace
 
 GameDataMatchSource::GameDataMatchSource(::GameData *gameData, QObject *parent)
     : QObject(parent),
       m_gameData(gameData),
       m_session(new MatchSession(this)) {
+    m_lastDataAtMs = QDateTime::currentMSecsSinceEpoch();
     m_timer.setInterval(100);
     connect(&m_timer, &QTimer::timeout, this, &GameDataMatchSource::refresh);
     if (m_gameData) {
+        const auto markDataUpdated = [this]() {
+            m_lastDataAtMs = QDateTime::currentMSecsSinceEpoch();
+            refresh();
+        };
         connect(m_gameData,
                 &GameData::matchProfileChanged,
                 this,
-                &GameDataMatchSource::refresh);
+                markDataUpdated);
         connect(m_gameData,
                 &GameData::gameStateUpdated,
                 this,
-                &GameDataMatchSource::refresh);
+                markDataUpdated);
         connect(m_gameData,
                 &GameData::myRobotUpdated,
                 this,
-                &GameDataMatchSource::refresh);
+                markDataUpdated);
+        connect(m_gameData,
+                &GameData::robotDataUpdated,
+                this,
+                [markDataUpdated](quint8) { markDataUpdated(); });
+        connect(m_gameData,
+                &GameData::robotPositionUpdated,
+                this,
+                [markDataUpdated](quint8, float, float, float, quint8) {
+                    markDataUpdated();
+                });
+        connect(m_gameData,
+                &GameData::moduleListChanged,
+                this,
+                markDataUpdated);
+        connect(m_gameData,
+                &GameData::robotCustomDataUpdated,
+                this,
+                [markDataUpdated](quint8) { markDataUpdated(); });
+        connect(m_gameData,
+                &GameData::dataChanged,
+                this,
+                markDataUpdated);
         connect(m_gameData,
                 &GameData::killEventOccurred,
                 this,
@@ -151,8 +193,15 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
     snapshot.matchId = QStringLiteral("real-game-data");
     snapshot.profile = QStringLiteral("rmul3v3");
     snapshot.phase = mapPhase(m_gameData->getCurrentStage());
+    snapshot.isPaused = m_gameData->is_paused();
     snapshot.timeRemainingSec = m_gameData->getGameTime();
     snapshot.round = qMax(1, m_gameData->currentRound());
+    const int currentRobotId = m_gameData->currentRobotId();
+    snapshot.operatorRobotId =
+        QStringLiteral("%1-%2")
+            .arg(currentRobotId >= 100 ? QStringLiteral("blue")
+                                       : QStringLiteral("red"))
+            .arg(currentRobotId % 100);
     snapshot.redTeam.name = m_gameData->redTeamName();
     snapshot.redTeam.score = m_gameData->redScore();
     snapshot.blueTeam.name = m_gameData->blueTeamName();
@@ -198,7 +247,8 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
         snapshot.blueTeam.outpostStatus = blueOutpost.status;
     }
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
-    snapshot.updatedAtMs = now;
+    snapshot.updatedAtMs =
+        m_lastDataAtMs > 0 ? m_lastDataAtMs : now;
 
     const QList<int> slotIds{1, 3, 4};
     const auto buildRobot = [&](bool red, int slot) {
@@ -209,7 +259,7 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
                        .arg(slot);
         robot.slot = slot;
         robot.side = red ? MatchSide::Red : MatchSide::Blue;
-        robot.telemetryScope = id == m_gameData->currentRobotId()
+        robot.telemetryScope = id == currentRobotId
             ? MatchTelemetryScope::Private
             : MatchTelemetryScope::Public;
         const RobotData *data = m_gameData->getRobotById(static_cast<quint8>(id));
@@ -218,7 +268,7 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
             robot.telemetryScope = MatchTelemetryScope::Public;
             return robot;
         }
-        robot.role = roleForSlot(slot);
+        robot.role = roleForType(data->type, slot);
         robot.health = data->hasTabGlobalSnapshot
             ? data->tabGlobalCurrentHP
             : data->currentHP;
@@ -235,6 +285,15 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
             data->status != RobotStatus::OFFLINE;
         robot.alive = robot.online && robot.health > 0 &&
             data->status != RobotStatus::DESTROYED;
+        robot.level = data->level;
+        robot.experience = data->experience;
+        robot.maxExperience = data->maxExperience;
+        robot.yellowCardCount = data->yellowCardCount;
+        robot.muzzleVelocityMps = data->muzzleVelocity;
+        robot.shootSpeedLimitMps = data->shootSpeedLimit;
+        robot.speedLockState = static_cast<int>(data->speedLockState);
+        robot.speedLockSeconds = data->speedLockSeconds;
+        robot.outOfCombat = data->isOutOfCombat;
         robot.respawnRemainingSec = 0;
         robot.updatedAtMs = data->lastUpdateTime.isValid()
             ? data->lastUpdateTime.toMSecsSinceEpoch()
@@ -270,6 +329,10 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
                 : mode == 2 ? MatchChassisMode::Spin
                 : mode == 3 ? MatchChassisMode::Protect
                 : MatchChassisMode::Normal;
+            robot.moduleStates = m_gameData->moduleStates();
+            robot.moduleData = m_gameData->getModuleData();
+            robot.buffTimedData = m_gameData->buffTimedData();
+            robot.customData = m_gameData->getMyRobotCustomData();
             robot.wheelLeg.mode = MatchWheelLegMode::Unknown;
         }
         return robot;

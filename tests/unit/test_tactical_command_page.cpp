@@ -459,7 +459,31 @@ private slots:
     page->setHeight(1080);
 
     QTRY_VERIFY(page->property("uiFirstMode").toBool());
+    QCOMPARE(page->property("operatorRobotNumber").toInt(), 3);
+    QCOMPARE(page->property("tacticalTerritoryData")
+                 .toMap()
+                 .value(QStringLiteral("redPoints"))
+                 .toInt(),
+             48);
+    QVERIFY(page->property("operatorBuffData")
+                .toMap()
+                .value(QStringLiteral("attack"))
+                .toMap()
+                .value(QStringLiteral("level"))
+                .toInt() > 0);
     QTRY_VERIFY(page->property("commandDashboardActive").toBool());
+    auto *commandMap = page->findChild<QQuickItem *>(
+        QStringLiteral("commandDashboardMap"));
+    QVERIFY(commandMap);
+    auto *fieldBuffs = commandMap->findChild<QObject *>(
+        QStringLiteral("tacticalFieldBuffStatus"));
+    QVERIFY(fieldBuffs);
+    QTRY_VERIFY(fieldBuffs->property("buffs")
+                    .toMap()
+                    .value(QStringLiteral("cooling"))
+                    .toMap()
+                    .value(QStringLiteral("level"))
+                    .toInt() > 0);
     QObject *scenarioPanel =
         page->findChild<QObject *>(QStringLiteral("mockScenarioPanel"));
     QVERIFY(scenarioPanel);
@@ -683,7 +707,14 @@ private slots:
     QCOMPARE(panel->property("bufferEnergy").toInt(), 40);
     QCOMPARE(panel->property("superCapEnergy").toReal(), 74.0);
     QCOMPARE(panel->property("chassisStatus").toString(),
-             QStringLiteral("普通 · 55 W"));
+             QStringLiteral("普通 · 55 W · 平衡"));
+    QCOMPARE(panel->property("moduleStates").toList().at(2).toInt(), 1);
+    QVERIFY(panel->property("buffTimedData")
+                .toMap()
+                .value(QStringLiteral("attack"))
+                .toMap()
+                .value(QStringLiteral("level"))
+                .toInt() > 0);
     QQuickItem *vehicleCard = nullptr;
     QTRY_VERIFY((vehicleCard = panel->findChild<QQuickItem *>(
                      QStringLiteral("pilotVehicleCard"))) != nullptr);
@@ -696,7 +727,7 @@ private slots:
     QTRY_COMPARE(panel->property("superCapEnergy").toReal(), 25.0);
     QCOMPARE(panel->property("bufferEnergy").toInt(), 18);
     QCOMPARE(panel->property("chassisStatus").toString(),
-             QStringLiteral("小陀螺 · 97 W"));
+             QStringLiteral("小陀螺 · 97 W · 切换中"));
   }
 
   void testCentralAimingHudUsesMockHeat() {

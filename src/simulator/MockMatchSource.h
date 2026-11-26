@@ -82,6 +82,7 @@ private:
     bool applyActionsAtElapsedSecond(int elapsedSec);
     bool applyLocalCombatStep(double virtualMs);
     bool fireImmediateShot();
+    void updateSnapshotPausedState(bool paused);
     void initializeScenarioSnapshot();
     void clearError();
     void reportError(const QString &message);

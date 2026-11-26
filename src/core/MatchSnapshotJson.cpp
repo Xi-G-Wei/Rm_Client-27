@@ -112,14 +112,31 @@ QJsonObject robotToJson(const MatchRobotSnapshot &robot) {
         {QStringLiteral("ammo"), robot.ammo},
         {QStringLiteral("heat"), robot.heat},
         {QStringLiteral("heatLimit"), robot.heatLimit},
+        {QStringLiteral("level"), robot.level},
+        {QStringLiteral("experience"), robot.experience},
+        {QStringLiteral("maxExperience"), robot.maxExperience},
+        {QStringLiteral("yellowCardCount"), robot.yellowCardCount},
+        {QStringLiteral("muzzleVelocityMps"), robot.muzzleVelocityMps},
+        {QStringLiteral("shootSpeedLimitMps"), robot.shootSpeedLimitMps},
+        {QStringLiteral("speedLockState"), robot.speedLockState},
+        {QStringLiteral("speedLockSeconds"), robot.speedLockSeconds},
         {QStringLiteral("online"), robot.online},
         {QStringLiteral("alive"), robot.alive},
+        {QStringLiteral("outOfCombat"), robot.outOfCombat},
         {QStringLiteral("respawnRemainingSec"), robot.respawnRemainingSec},
         {QStringLiteral("hasPosition"), robot.hasPosition},
         {QStringLiteral("updatedAtMs"), robot.updatedAtMs},
         {QStringLiteral("energy"), energy},
         {QStringLiteral("chassis"), chassis},
         {QStringLiteral("wheelLeg"), wheelLeg},
+        {QStringLiteral("moduleStates"),
+         QJsonArray::fromVariantList(robot.moduleStates)},
+        {QStringLiteral("moduleData"),
+         QJsonArray::fromVariantList(robot.moduleData)},
+        {QStringLiteral("buffTimedData"),
+         QJsonObject::fromVariantMap(robot.buffTimedData)},
+        {QStringLiteral("customData"),
+         QJsonObject::fromVariantMap(robot.customData)},
     };
     if (robot.hasPosition) {
         object.insert(QStringLiteral("mapX"), robot.mapX);
@@ -206,6 +223,22 @@ bool parseRobot(const QJsonObject &object,
     }
     robot->online = object.value(QStringLiteral("online")).toBool();
     robot->alive = object.value(QStringLiteral("alive")).toBool();
+    robot->level = object.value(QStringLiteral("level")).toInt(-1);
+    robot->experience = object.value(QStringLiteral("experience")).toInt(-1);
+    robot->maxExperience =
+        object.value(QStringLiteral("maxExperience")).toInt(-1);
+    robot->yellowCardCount =
+        object.value(QStringLiteral("yellowCardCount")).toInt(0);
+    robot->muzzleVelocityMps =
+        object.value(QStringLiteral("muzzleVelocityMps")).toDouble(-1.0);
+    robot->shootSpeedLimitMps =
+        object.value(QStringLiteral("shootSpeedLimitMps")).toDouble(-1.0);
+    robot->speedLockState =
+        object.value(QStringLiteral("speedLockState")).toInt(0);
+    robot->speedLockSeconds =
+        object.value(QStringLiteral("speedLockSeconds")).toInt(0);
+    robot->outOfCombat =
+        object.value(QStringLiteral("outOfCombat")).toBool(robot->alive);
     robot->hasPosition = object.value(QStringLiteral("hasPosition")).toBool();
     robot->updatedAtMs =
         static_cast<qint64>(object.value(QStringLiteral("updatedAtMs")).toDouble());
@@ -289,6 +322,16 @@ bool parseRobot(const QJsonObject &object,
         }
         robot->wheelLeg.joints.append(parsed);
     }
+    for (const QJsonValue &value :
+         object.value(QStringLiteral("moduleStates")).toArray()) {
+        robot->moduleStates.append(value.toInt(-1));
+    }
+    robot->moduleData =
+        object.value(QStringLiteral("moduleData")).toArray().toVariantList();
+    robot->buffTimedData =
+        object.value(QStringLiteral("buffTimedData")).toObject().toVariantMap();
+    robot->customData =
+        object.value(QStringLiteral("customData")).toObject().toVariantMap();
     return true;
 }
 
@@ -349,8 +392,10 @@ QJsonObject matchSnapshotToJson(const MatchSnapshot &snapshot) {
         {QStringLiteral("matchId"), snapshot.matchId},
         {QStringLiteral("profile"), snapshot.profile},
         {QStringLiteral("phase"), phaseKey(snapshot.phase)},
+        {QStringLiteral("isPaused"), snapshot.isPaused},
         {QStringLiteral("timeRemainingSec"), snapshot.timeRemainingSec},
         {QStringLiteral("round"), snapshot.round},
+        {QStringLiteral("operatorRobotId"), snapshot.operatorRobotId},
         {QStringLiteral("redTeam"), teamToJson(snapshot.redTeam)},
         {QStringLiteral("blueTeam"), teamToJson(snapshot.blueTeam)},
         {QStringLiteral("events"), events},
@@ -376,6 +421,10 @@ bool matchSnapshotFromJson(const QJsonObject &object,
     }
     parsed.updatedAtMs =
         static_cast<qint64>(object.value(QStringLiteral("updatedAtMs")).toDouble());
+    parsed.isPaused = object.value(QStringLiteral("isPaused")).toBool(false);
+    parsed.operatorRobotId =
+        object.value(QStringLiteral("operatorRobotId"))
+            .toString(QStringLiteral("red-3"));
     if (!parseTeam(object.value(QStringLiteral("redTeam")).toObject(),
                    &parsed.redTeam, error) ||
         !parseTeam(object.value(QStringLiteral("blueTeam")).toObject(),
@@ -401,6 +450,21 @@ bool matchSnapshotFromJson(const QJsonObject &object,
             == QStringLiteral("blue") ? MatchSide::Blue : MatchSide::Red;
         parsedEvent.robotSlot = event.value(QStringLiteral("robotSlot")).toInt(-1);
         parsed.events.append(parsedEvent);
+    }
+    if (parsed.operatorRobotId.trimmed().isEmpty()) {
+        parsed.operatorRobotId = QStringLiteral("red-3");
+    }
+    for (MatchRobotSnapshot &robot : parsed.redTeam.robots) {
+        robot.telemetryScope =
+            robot.id == parsed.operatorRobotId
+                ? MatchTelemetryScope::Private
+                : MatchTelemetryScope::Public;
+    }
+    for (MatchRobotSnapshot &robot : parsed.blueTeam.robots) {
+        robot.telemetryScope =
+            robot.id == parsed.operatorRobotId
+                ? MatchTelemetryScope::Private
+                : MatchTelemetryScope::Public;
     }
     *snapshot = parsed;
     return true;

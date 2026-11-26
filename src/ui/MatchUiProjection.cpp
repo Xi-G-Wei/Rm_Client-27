@@ -82,6 +82,12 @@ QVariantMap robotCard(const MatchRobotSnapshot &robot) {
         card.insert(QStringLiteral("energy"), robot.energy.toVariantMap());
         card.insert(QStringLiteral("chassis"), robot.chassis.toVariantMap());
         card.insert(QStringLiteral("wheelLeg"), robot.wheelLeg.toVariantMap());
+        card.insert(QStringLiteral("moduleStates"), robot.moduleStates);
+        card.insert(QStringLiteral("moduleData"), robot.moduleData);
+        card.insert(QStringLiteral("buffTimedData"), robot.buffTimedData);
+        card.insert(QStringLiteral("customData"), robot.customData);
+        card.insert(QStringLiteral("level"), robot.level);
+        card.insert(QStringLiteral("yellowCardCount"), robot.yellowCardCount);
     }
     if (privateTelemetry && robot.energy.chassisPowerLimitW >= 0.0) {
         card.insert(QStringLiteral("maxPower"),
@@ -274,8 +280,13 @@ QVariantMap MatchUiProjection::headerData() const {
         return {};
     }
     const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    const QString sourceLabel = m_sourceKind == QStringLiteral("real")
+        ? QStringLiteral("真实比赛")
+        : m_sourceKind == QStringLiteral("replay")
+            ? QStringLiteral("录像回放")
+            : QStringLiteral("本地模拟");
     return {
-        {QStringLiteral("matchMode"), QStringLiteral("3v3 模拟")},
+        {QStringLiteral("matchMode"), QStringLiteral("3v3 %1").arg(sourceLabel)},
         {QStringLiteral("redScore"), snapshot.redTeam.score},
         {QStringLiteral("blueScore"), snapshot.blueTeam.score},
         {QStringLiteral("currentRound"), snapshot.round},
@@ -284,31 +295,36 @@ QVariantMap MatchUiProjection::headerData() const {
          formatClock(snapshot.timeRemainingSec)},
         {QStringLiteral("stage"), matchPhaseKey(snapshot.phase)},
         {QStringLiteral("stageLabel"), matchPhaseLabel(snapshot.phase)},
-        {QStringLiteral("linkStatus"), QStringLiteral("本地模拟")},
+        {QStringLiteral("linkStatus"), sourceLabel},
         {QStringLiteral("linkLatency"), 0},
     };
 }
 
 QVariantMap MatchUiProjection::resourceData() const {
-    if (!m_session)
+    if (!m_session) {
         return {};
+    }
     const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    const bool allyRed = operatorRobot().side == MatchSide::Red;
+    const MatchTeamSnapshot &ally = allyRed
+        ? snapshot.redTeam : snapshot.blueTeam;
+    const MatchTeamSnapshot &enemy = allyRed
+        ? snapshot.blueTeam : snapshot.redTeam;
     return {
-        {QStringLiteral("allyBaseHp"), snapshot.redTeam.baseHealth},
-        {QStringLiteral("allyBaseMax"), snapshot.redTeam.baseMaxHealth},
-        {QStringLiteral("enemyBaseHp"), snapshot.blueTeam.baseHealth},
-        {QStringLiteral("enemyBaseMax"), snapshot.blueTeam.baseMaxHealth},
-        {QStringLiteral("allyOutpostHp"), snapshot.redTeam.outpostHealth},
-        {QStringLiteral("allyOutpostMax"), snapshot.redTeam.outpostMaxHealth},
-        {QStringLiteral("enemyOutpostHp"), snapshot.blueTeam.outpostHealth},
-        {QStringLiteral("enemyOutpostMax"), snapshot.blueTeam.outpostMaxHealth},
+        {QStringLiteral("allyBaseHp"), ally.baseHealth},
+        {QStringLiteral("allyBaseMax"), ally.baseMaxHealth},
+        {QStringLiteral("enemyBaseHp"), enemy.baseHealth},
+        {QStringLiteral("enemyBaseMax"), enemy.baseMaxHealth},
+        {QStringLiteral("allyOutpostHp"), ally.outpostHealth},
+        {QStringLiteral("allyOutpostMax"), ally.outpostMaxHealth},
+        {QStringLiteral("enemyOutpostHp"), enemy.outpostHealth},
+        {QStringLiteral("enemyOutpostMax"), enemy.outpostMaxHealth},
         {QStringLiteral("economyDiff"),
-         snapshot.redTeam.economy >= 0 && snapshot.blueTeam.economy >= 0
-             ? snapshot.redTeam.economy - snapshot.blueTeam.economy : 0},
+         ally.economy >= 0 && enemy.economy >= 0
+             ? ally.economy - enemy.economy : 0},
         {QStringLiteral("damageDiff"),
-         snapshot.redTeam.totalDamage >= 0 &&
-                 snapshot.blueTeam.totalDamage >= 0
-             ? snapshot.redTeam.totalDamage - snapshot.blueTeam.totalDamage : 0},
+         ally.totalDamage >= 0 && enemy.totalDamage >= 0
+             ? ally.totalDamage - enemy.totalDamage : 0},
         {QStringLiteral("hpDiff"), 0},
     };
 }
@@ -316,15 +332,17 @@ QVariantMap MatchUiProjection::resourceData() const {
 QVariantMap MatchUiProjection::topStatusData() const {
     const MatchSnapshot snapshot =
         m_session ? m_session->matchSnapshot() : MatchSnapshot{};
+    const MatchTeamSnapshot &ally = operatorRobot().side == MatchSide::Blue
+        ? snapshot.blueTeam : snapshot.redTeam;
     return {
         {QStringLiteral("allyRemainingEconomy"),
-         qMax(0, snapshot.redTeam.economy)},
+         qMax(0, ally.economy)},
         {QStringLiteral("allyTotalEconomyObtained"),
-         qMax(0, snapshot.redTeam.totalEconomyObtained)},
+         qMax(0, ally.totalEconomyObtained)},
         {QStringLiteral("allyTechLevel"),
-         qMax(0, snapshot.redTeam.techLevel)},
+         qMax(0, ally.techLevel)},
         {QStringLiteral("allyEncryptionLevel"),
-         qMax(0, snapshot.redTeam.encryptionLevel)},
+         qMax(0, ally.encryptionLevel)},
         {QStringLiteral("allyFortressOccupationSec"), 0},
         {QStringLiteral("enemyFortressOccupationSec"), 0},
         {QStringLiteral("respawnGoldCost"), 0},
@@ -359,14 +377,18 @@ QVariantList MatchUiProjection::allyRobotList() const {
     if (!m_session) {
         return {};
     }
-    return robotCards(m_session->matchSnapshot().redTeam);
+    const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    return robotCards(operatorRobot().side == MatchSide::Blue
+                          ? snapshot.blueTeam : snapshot.redTeam);
 }
 
 QVariantList MatchUiProjection::enemyRobotList() const {
     if (!m_session) {
         return {};
     }
-    return robotCards(m_session->matchSnapshot().blueTeam);
+    const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    return robotCards(operatorRobot().side == MatchSide::Blue
+                          ? snapshot.redTeam : snapshot.blueTeam);
 }
 
 QVariantMap MatchUiProjection::mapData() const {
@@ -374,12 +396,13 @@ QVariantMap MatchUiProjection::mapData() const {
         return {};
     }
     const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    const bool allyRed = operatorRobot().side == MatchSide::Red;
     return {
         {QStringLiteral("radarAgeMs"), 0},
         {QStringLiteral("allyRobots"),
-         positionedRobots(snapshot.redTeam, true)},
+         positionedRobots(allyRed ? snapshot.redTeam : snapshot.blueTeam, true)},
         {QStringLiteral("enemyRobots"),
-         positionedRobots(snapshot.blueTeam, false)},
+         positionedRobots(allyRed ? snapshot.blueTeam : snapshot.redTeam, false)},
         {QStringLiteral("focusTargetId"), QString()},
         {QStringLiteral("mapImageSource"),
          QStringLiteral("qrc:/images/rmul3v3.png")},
@@ -403,14 +426,28 @@ QVariantMap MatchUiProjection::cameraPreviewData() const {
 }
 
 QVariantMap MatchUiProjection::linkHealth() const {
+    const bool available = active();
+    const QString health = dataHealth();
+    const int ageMs = dataAgeMs();
+    const QString linkStatus = !available
+        ? QStringLiteral("lost")
+        : health == QStringLiteral("fresh") ? QStringLiteral("ok")
+        : health == QStringLiteral("stale") ? QStringLiteral("stale")
+                                             : QStringLiteral("lost");
     return {
-        {QStringLiteral("mqttStatus"), QStringLiteral("mock")},
-        {QStringLiteral("mqttLatencyMs"), 0},
+        {QStringLiteral("mqttStatus"),
+         m_sourceKind == QStringLiteral("mock")
+             ? QStringLiteral("mock") : linkStatus},
+        {QStringLiteral("mqttLatencyMs"), ageMs},
         {QStringLiteral("videoStatus"), QStringLiteral("disabled")},
-        {QStringLiteral("videoLatencyMs"), 0},
-        {QStringLiteral("radarStatus"), QStringLiteral("mock")},
-        {QStringLiteral("radarAgeMs"), 0},
-        {QStringLiteral("commandStatus"), QStringLiteral("disabled")},
+        {QStringLiteral("videoLatencyMs"), -1},
+        {QStringLiteral("radarStatus"),
+         m_sourceKind == QStringLiteral("mock")
+             ? QStringLiteral("ok") : linkStatus},
+        {QStringLiteral("radarAgeMs"), ageMs},
+        {QStringLiteral("commandStatus"),
+         m_sourceKind == QStringLiteral("mock")
+             ? QStringLiteral("disabled") : linkStatus},
     };
 }
 
@@ -468,7 +505,7 @@ QString MatchUiProjection::gamePhase() const {
 }
 
 bool MatchUiProjection::isPaused() const {
-    return false;
+    return m_session && m_session->matchSnapshot().isPaused;
 }
 
 bool MatchUiProjection::uses2027Protocol() const {
@@ -476,7 +513,16 @@ bool MatchUiProjection::uses2027Protocol() const {
 }
 
 QVariantMap MatchUiProjection::territoryStatus() const {
-    return {};
+    if (!m_session) {
+        return {};
+    }
+    const MatchSnapshot &snapshot = m_session->matchSnapshot();
+    return {
+        {QStringLiteral("redPoints"), snapshot.redTeam.controlPoints},
+        {QStringLiteral("bluePoints"), snapshot.blueTeam.controlPoints},
+        {QStringLiteral("redControlPoints"), snapshot.redTeam.controlPoints},
+        {QStringLiteral("blueControlPoints"), snapshot.blueTeam.controlPoints},
+    };
 }
 
 QString MatchUiProjection::redTeamName() const {
@@ -502,14 +548,20 @@ MatchRobotSnapshot MatchUiProjection::operatorRobot() const {
         return {};
     }
     const MatchSnapshot &snapshot = m_session->matchSnapshot();
-    for (const MatchRobotSnapshot &robot : snapshot.redTeam.robots) {
-        if (robot.slot == 3) {
+    const QList<MatchRobotSnapshot> allRobots =
+        snapshot.redTeam.robots + snapshot.blueTeam.robots;
+    for (const MatchRobotSnapshot &robot : allRobots) {
+        if (!snapshot.operatorRobotId.isEmpty() &&
+            robot.id == snapshot.operatorRobotId) {
             return robot;
         }
     }
-    return snapshot.redTeam.robots.isEmpty()
-        ? MatchRobotSnapshot{}
-        : snapshot.redTeam.robots.first();
+    for (const MatchRobotSnapshot &robot : allRobots) {
+        if (robot.telemetryScope == MatchTelemetryScope::Private) {
+            return robot;
+        }
+    }
+    return allRobots.isEmpty() ? MatchRobotSnapshot{} : allRobots.first();
 }
 
 int MatchUiProjection::currentHealth() const {
@@ -542,11 +594,12 @@ double MatchUiProjection::superCapEnergy() const {
 }
 
 int MatchUiProjection::robotLevel() const {
-    return 1;
+    const MatchRobotSnapshot robot = operatorRobot();
+    return robot.level > 0 ? robot.level : 1;
 }
 
 int MatchUiProjection::maxlevel() const {
-    return 1;
+    return 10;
 }
 
 int MatchUiProjection::robotId() const {
@@ -554,15 +607,16 @@ int MatchUiProjection::robotId() const {
 }
 
 int MatchUiProjection::currentExp() const {
-    return 0;
+    return qMax(0, operatorRobot().experience);
 }
 
 int MatchUiProjection::maxExp() const {
-    return 100;
+    const int maximum = operatorRobot().maxExperience;
+    return maximum > 0 ? maximum : 100;
 }
 
 int MatchUiProjection::yellowCardCount() const {
-    return 0;
+    return qMax(0, operatorRobot().yellowCardCount);
 }
 
 QString MatchUiProjection::outOfCombatStatus() const {
@@ -570,8 +624,9 @@ QString MatchUiProjection::outOfCombatStatus() const {
     if (!robot.online) {
         return QStringLiteral("数据中断");
     }
-    return robot.alive ? QStringLiteral("已脱战")
-                       : QStringLiteral("等待复活");
+    return !robot.alive ? QStringLiteral("等待复活")
+        : robot.outOfCombat ? QStringLiteral("已脱战")
+                            : QStringLiteral("交战中");
 }
 
 QString MatchUiProjection::chassisStatus() const {
@@ -588,15 +643,22 @@ QString MatchUiProjection::chassisStatus() const {
         parts.append(
             QStringLiteral("%1 W").arg(qRound(robot.energy.chassisPowerW)));
     }
+    if (robot.wheelLeg.telemetryAvailable) {
+        parts.append(matchWheelLegModeLabel(robot.wheelLeg.mode));
+    }
     return parts.join(QStringLiteral(" · "));
 }
 
 bool MatchUiProjection::isOutOfCombat() const {
     const MatchRobotSnapshot robot = operatorRobot();
-    return robot.online && robot.alive;
+    return robot.online && robot.alive && robot.outOfCombat;
 }
 
 QVariantList MatchUiProjection::moduleStates() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    if (!robot.moduleStates.isEmpty()) {
+        return robot.moduleStates;
+    }
     const int state = operatorRobot().online ? 0 : 2;
     QVariantList states;
     for (int index = 0; index < 10; ++index) {
@@ -606,6 +668,10 @@ QVariantList MatchUiProjection::moduleStates() const {
 }
 
 QVariantList MatchUiProjection::moduleData() const {
+    const MatchRobotSnapshot robot = operatorRobot();
+    if (!robot.moduleData.isEmpty()) {
+        return robot.moduleData;
+    }
     const bool online = operatorRobot().online;
     QVariantList modules;
     for (int index = 0; index < 10; ++index) {
@@ -618,7 +684,7 @@ QVariantList MatchUiProjection::moduleData() const {
 }
 
 QVariantMap MatchUiProjection::buffTimedData() const {
-    return {};
+    return operatorRobot().buffTimedData;
 }
 
 QVariantMap MatchUiProjection::myRobot() const {
@@ -633,8 +699,9 @@ QVariantMap MatchUiProjection::myRobot() const {
     return {
         {QStringLiteral("type"), robotType},
         {QStringLiteral("isClientConnected"), robot.online},
-        {QStringLiteral("isOutOfCombat"), robot.online && robot.alive},
-        {QStringLiteral("isRedTeam"), true},
+        {QStringLiteral("isOutOfCombat"),
+         robot.online && robot.alive && robot.outOfCombat},
+        {QStringLiteral("isRedTeam"), robot.side == MatchSide::Red},
         {QStringLiteral("currentHeat"), qMax(0, robot.heat)},
         {QStringLiteral("heatLimit"),
          robot.heatLimit > 0 ? robot.heatLimit : 240},
@@ -645,12 +712,16 @@ QVariantMap MatchUiProjection::myRobot() const {
          robot.role == MatchRobotRole::Heavy ? 0 : qMax(0, robot.ammo)},
         {QStringLiteral("allowedAmmo42mm"),
          robot.role == MatchRobotRole::Heavy ? qMax(0, robot.ammo) : 0},
-        {QStringLiteral("muzzleVelocity"), 25.0},
-        {QStringLiteral("shootSpeedLimit"), 30.0},
-        {QStringLiteral("speedLockState"), 0},
-        {QStringLiteral("speedLockSeconds"), 0},
+        {QStringLiteral("muzzleVelocity"),
+         robot.muzzleVelocityMps >= 0.0 ? robot.muzzleVelocityMps : 0.0},
+        {QStringLiteral("shootSpeedLimit"),
+         robot.shootSpeedLimitMps >= 0.0 ? robot.shootSpeedLimitMps : 0.0},
+        {QStringLiteral("speedLockState"), robot.speedLockState},
+        {QStringLiteral("speedLockSeconds"), robot.speedLockSeconds},
         {QStringLiteral("superCapEnergy"),
          robot.energy.superCapPercent},
+        {QStringLiteral("robotLevel"), qMax(0, robot.level)},
+        {QStringLiteral("yellowCardCount"), robot.yellowCardCount},
         {QStringLiteral("chassisMode"),
          matchChassisModeLabel(robot.chassis.mode)},
         {QStringLiteral("driveType"),
@@ -662,6 +733,14 @@ QVariantMap MatchUiProjection::myRobot() const {
 
 QVariantMap MatchUiProjection::myRobotCustomData() const {
     const MatchRobotSnapshot robot = operatorRobot();
+    if (!robot.customData.isEmpty()) {
+        QVariantMap data = robot.customData;
+        if (!data.contains(QStringLiteral("superCapEnergy"))) {
+            data.insert(QStringLiteral("superCapEnergy"),
+                        robot.energy.superCapPercent);
+        }
+        return data;
+    }
     int chassisMode = 0;
     switch (robot.chassis.mode) {
     case MatchChassisMode::Follow: chassisMode = 1; break;

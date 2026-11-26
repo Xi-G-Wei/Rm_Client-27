@@ -65,14 +65,22 @@ Rectangle {
     // qmllint disable unqualified
     readonly property var gameDataContext: typeof gameData !== "undefined" ? gameData : null
     // qmllint enable unqualified
-    readonly property bool currentSeason: root.gameDataContext
-        ? Boolean(root.gameDataContext.uses2027Protocol) : false
-    readonly property real fieldWidth: root.currentSeason ? root.gameDataContext.fieldWidth : 28
-    readonly property real fieldHeight: root.currentSeason ? root.gameDataContext.fieldHeight : 15
+    readonly property bool currentSeason: root.pageRoot
+        && root.pageRoot.uiFirstMode ? true : root.gameDataContext
+            ? Boolean(root.gameDataContext.uses2027Protocol) : false
+    readonly property real fieldWidth: root.pageRoot && root.pageRoot.uiFirstMode
+        ? Number(root.pageRoot.dataSource?.fieldWidth || 12) : root.currentSeason
+            ? root.gameDataContext.fieldWidth : 28
+    readonly property real fieldHeight: root.pageRoot && root.pageRoot.uiFirstMode
+        ? Number(root.pageRoot.dataSource?.fieldHeight || 8) : root.currentSeason
+            ? root.gameDataContext.fieldHeight : 15
     readonly property real fieldAspect: root.fieldWidth / root.fieldHeight
     readonly property string fieldName: !root.currentSeason ? "2026 联调"
         : (root.fieldWidth === 28 ? "超级对抗赛" : (root.fieldWidth === 12 ? "联盟赛 3V3" : "联盟赛 1V1"))
-    readonly property var objectiveData: root.gameDataContext?.territoryStatus || ({})
+    readonly property var objectiveData: root.pageRoot
+        && root.pageRoot.tacticalTerritoryData !== undefined
+            ? root.pageRoot.tacticalTerritoryData
+            : (root.gameDataContext?.territoryStatus || ({}))
     readonly property var objectiveLocations: root.currentSeason && root.fieldWidth === 28 ? [
         { key: "redBase", x: 24.11, y: 75, base: true, red: true },
         { key: "blueBase", x: 255.89, y: 75, base: true, red: false },
@@ -122,8 +130,11 @@ Rectangle {
             { x: 5.5, y: 7.6, label: "启动区" }, { x: 44.5, y: 42.4, label: "启动区" },
             { x: 17.4, y: 25.5, label: "掩体" }, { x: 32.6, y: 24.5, label: "掩体" }
         ])
-    readonly property int currentRobotNumber: root.gameDataContext
-        ? Number(root.gameDataContext.currentRobotId || 0) % 100 : 0
+    readonly property int currentRobotNumber: root.pageRoot
+        && root.pageRoot.operatorRobotNumber !== undefined
+            ? Number(root.pageRoot.operatorRobotNumber)
+            : (root.gameDataContext
+                ? Number(root.gameDataContext.currentRobotId || 0) % 100 : 0)
     readonly property color selfRobotColor: "#9be1c6"
     onCurrentRobotNumberChanged: mapCanvas.requestPaint()
     function robotNumberText(robot) {
@@ -870,8 +881,13 @@ Rectangle {
         }
 
         HUD.FieldBuffStatus {
+            objectName: "tacticalFieldBuffStatus"
             anchors.centerIn: parent
-            buffs: root.currentSeason ? (root.gameDataContext?.buffTimedData || ({})) : ({})
+            buffs: root.currentSeason
+                ? (root.pageRoot && root.pageRoot.operatorBuffData !== undefined
+                    ? root.pageRoot.operatorBuffData
+                    : (root.gameDataContext?.buffTimedData || ({})))
+                : ({})
             visualScale: root.visualScale
         }
 

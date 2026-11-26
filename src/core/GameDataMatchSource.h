@@ -48,6 +48,7 @@ private:
     QString m_lastError;
     QList<MatchEventSnapshot> m_events;
     quint64 m_nextEventSequence = 1;
+    qint64 m_lastDataAtMs = 0;
 };
 
 } // namespace RM
