@@ -119,7 +119,10 @@ if (!message.ParseFromArray(payload.constData(), payload.size())) {
 gameData->updateGameStatus(message);
 ```
 
-### 5.2 3v3 首轮联调必须接通的数据
+### 5.2 RMUL 首轮联调的数据入口
+
+以下为两种赛项共用的现有解析入口；是否实际订阅和显示某类消息，以对应赛项协议为准。
+1v1 不显示基地、前哨和控制度；不要为了填满界面而伪造这些字段。
 
 | Topic | 主要字段 | UI 用途 | 现有入口 |
 | --- | --- | --- | --- |
@@ -174,7 +177,7 @@ Protobuf 的 `optional` 字段未出现时，应保留“未上报”语义；�
 
 ## 7. RMUL 快照约束
 
-当前真实数据适配器面向 3v3：
+当前真实数据适配器支持 3v3 和 1v1：
 
 - 比赛配置为 `RM::MatchProfile::Rmul3v3` 或 `RM::MatchProfile::Rmul1v1`。
 - 3v3 当前机器人列表按车位 `1、3、4` 生成双方机器人；1v1 每队只有车位 `3`。
@@ -258,7 +261,7 @@ Protobuf 的 `optional` 字段未出现时，应保留“未上报”语义；�
 | 6 | Q | 14 | V |
 | 7 | E | 15 | B |
 
-注意：当前 2027/RMUL 3v3 配置会对部分旧 UDP 和 `KeyboardMouseControl` 入口主动返回失败，等待按新版协议重新确认。通信组接入时可以在保持公共方法签名不变的前提下替换内部实现，但必须重新验证频率、字段语义、失联保护和发射安全联锁。
+注意：当前 2027/RMUL 3v3、1v1 配置会对部分旧 UDP 和 `KeyboardMouseControl` 入口主动返回失败，等待按新版协议重新确认。通信组接入时可以在保持公共方法签名不变的前提下替换内部实现，但必须重新验证频率、字段语义、失联保护和发射安全联锁。
 
 ## 10. 新字段接入步骤
 
@@ -278,12 +281,32 @@ Protobuf 的 `optional` 字段未出现时，应保留“未上报”语义；�
 
 ### 11.1 使用模拟数据先验证 UI
 
+3v3：
+
 ```bash
 cd ~/RM/Client_27
-RM_UI_FIRST_MOCK=1 ./build/dev/RoboMasterClient2025
+RM_MATCH_PROFILE=rmul3v3 RM_UI_FIRST_MOCK=1 ./build/dev/RoboMasterClient2025
 ```
 
-启动后按 `Ctrl+T` 切换指挥页和操作页，确认模拟状态能正常变化。
+1v1：
+
+```bash
+RM_MATCH_PROFILE=rmul1v1 RM_UI_FIRST_MOCK=1 ./build/dev/RoboMasterClient2025
+```
+
+Windows CMD（已完成依赖安装）：
+
+```bat
+set "RM_MATCH_PROFILE=rmul1v1"
+set "RM_UI_FIRST_MOCK=1"
+start-windows.bat build
+```
+
+Windows 体验 3v3 时，将第一行改为 `set "RM_MATCH_PROFILE=rmul3v3"`。
+
+启动后按 `Ctrl+T` 切换指挥页和操作页，操作页按住左键测试弹量和热量变化。
+`F5` 暂停/继续、`F6` 重新开始、`F7` 在当前赛项的基础/受伤/离线/结算场景内切换。
+这些本地模拟功能不要求连接机器人。1v1 详细说明见 [1v1 开发说明](1v1-development.md)。
 
 ### 11.2 录制真实报文或回放
 
