@@ -39,9 +39,10 @@ Rectangle {
     readonly property int roundNumber: hasSnapshot
         ? Number(snapshot.round || 1)
         : Number(game?.currentRound || 0)
-    readonly property string phaseText: hasSnapshot
-        ? String(snapshot.phaseLabel || game?.gamePhase || "等待开赛")
-        : String(game?.gamePhase || "等待开赛")
+    readonly property string phaseText: (hasSnapshot ? snapshot.isPaused : game?.is_paused)
+        ? "比赛暂停" : hasSnapshot
+            ? String(snapshot.phaseLabel || game?.gamePhase || "等待开赛")
+            : String(game?.gamePhase || "等待开赛")
 
     readonly property string clock: {
         const t = Math.max(0, root.remainingSeconds)

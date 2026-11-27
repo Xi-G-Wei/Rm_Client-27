@@ -31,6 +31,15 @@ RM_UI_FIRST_MOCK=1 ./build/dev/RoboMasterClient2025
 
 启动后按 `Ctrl+T` 进入 3v3 指挥页。
 
+运行 1v1 本地模拟（双方各一台步兵）：
+
+```bash
+RM_MATCH_PROFILE=rmul1v1 RM_UI_FIRST_MOCK=1 ./build/dev/RoboMasterClient2025
+```
+
+沿用现有设置页选择赛项，模拟面板切换当前赛项的基础、受伤、离线、结算场景。1v1 的
+体验步骤和通信边界见 [1v1 开发说明](docs/1v1-development.md)。默认启动仍为 3v3。
+
 ## 许可证与素材
 
 项目源代码沿用上游 [MIT License](LICENSE)。第三方代码、地图和素材的授权与署名

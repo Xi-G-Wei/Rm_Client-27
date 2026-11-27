@@ -215,7 +215,7 @@ private slots:
                      .value(QStringLiteral("isRedTeam"))
                      .toBool(),
                  false);
-        QCOMPARE(projection.robotId(), 3);
+        QCOMPARE(projection.robotId(), 103);
         QCOMPARE(projection.superCapEnergy(), 69.0);
         const QVariantList allies = projection.allyRobotList();
         QCOMPARE(allies.size(), 3);

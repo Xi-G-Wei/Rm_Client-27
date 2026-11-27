@@ -1,8 +1,10 @@
-# RMUL 3v3 客户端通信接口接入说明
+# RMUL 3v3 / 1v1 客户端通信接口接入说明
 
-更新时间：2026-11-26  
+更新时间：2026-11-27
+
 适用分支：`feature/ui-first-3v3`  
-适用赛项：RMUL 3v3  
+适用赛项：RMUL 3v3、RMUL 1v1
+
 当前基线：以该分支最新提交为准
 
 ## 1. 文档目的
@@ -89,7 +91,7 @@ export RM_CLIENT_ROBOT_ID=3
 
 启动时不要设置 `RM_UI_FIRST_MOCK`。未启用模拟或回放时，主程序会创建 `GameDataMatchSource` 并将真实 `GameData` 接入 UI。
 
-如果仍处于 `rmuc2027`、`rmul1v1` 或 `legacy2026`，`GameDataMatchSource` 会保持不可用并提示等待 RMUL 3v3 配置。
+1v1 使用 `RM_MATCH_PROFILE=rmul1v1`，或将配置的 `competition.profile` 设为 `rmul1v1`；适配器会只生成红、蓝双方各一台 3 号步兵，地图按仓库配置使用 5×5 米。`rmuc2027` 和 `legacy2026` 不进入此 RMUL 快照适配器。
 
 ## 5. 入站数据接入
 
@@ -170,12 +172,14 @@ kUnknownMatchReal = -1.0;   // 浮点未知值
 
 Protobuf 的 `optional` 字段未出现时，应保留“未上报”语义；只有协议明确规定该字段存在且值可以为 0 时，才更新为 0。
 
-## 7. 3v3 快照约束
+## 7. RMUL 快照约束
 
 当前真实数据适配器面向 3v3：
 
-- 比赛配置必须是 `RM::MatchProfile::Rmul3v3`。
-- 当前机器人列表按车位 `1、3、4` 生成双方机器人。
+- 比赛配置为 `RM::MatchProfile::Rmul3v3` 或 `RM::MatchProfile::Rmul1v1`。
+- 3v3 当前机器人列表按车位 `1、3、4` 生成双方机器人；1v1 每队只有车位 `3`。
+- `MatchSnapshot.profile` 为 `rmul3v3` 或 `rmul1v1`；校验器分别要求每队 3 台或 1 台机器人。
+- 1v1 复用 3v3 的现有界面，双方各一台车；没有基地和控制度，统计显示剩余血量，不新增遥测面板。
 - `operatorRobotId` 明确标记当前操作机器人，只有它是 `Private`，其余机器人均是 `Public`。
 - 操作机器人可以从红方或蓝方选择，友方、敌方列表以及地图阵营视角会同步切换。
 - 当前角色默认映射为：车位 1 是重装，车位 3、4 是步兵。

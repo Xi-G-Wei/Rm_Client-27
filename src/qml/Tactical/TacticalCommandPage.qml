@@ -60,7 +60,7 @@ Rectangle {
     readonly property bool enemyIsBlue: root.allyIsRed
     readonly property bool tacticalMapViewMirrored: root.allyIsBlue
     readonly property string tacticalMapBackgroundSource: root.uiFirstMode
-        ? "qrc:/images/rmul3v3.png"
+        ? String(root.dataSource.mapData?.mapImageSource || "qrc:/images/rmul3v3.png")
         : root.gameDataContext
         && root.gameDataContext.uses2027Protocol ? root.gameDataContext.mapBackground
         : (root.allyIsBlue ? "qrc:/images/minimap_bg_blue_left.png"
@@ -94,7 +94,7 @@ Rectangle {
         ? (root.matchUiContext?.buffTimedData || ({}))
         : (root.gameDataContext?.buffTimedData || ({}))
     readonly property int operatorRobotNumber: root.uiFirstMode
-        ? Number(root.matchUiContext?.robotId || 0)
+        ? Number(root.matchUiContext?.robotId || 0) % 100
         : Number(root.gameDataContext?.currentRobotId || 0) % 100
     readonly property bool largeMapMode: root.mainWindowContext
         ? Boolean(root.mainWindowContext.tacticalLargeMapMode) : false
@@ -156,8 +156,8 @@ Rectangle {
         objectName: "mockScenarioPanel"
         source: root.mockSourceContext
         visible: root.mockControlsActive
-        x: Math.max(8, root.width - Math.round(root.width * 0.1815)
-            - width - 48)
+        x: Math.min(root.width - width - 12,
+            root.width / 2 + Math.max(110, Math.round(root.width * 0.10)) + 16)
         y: Math.max(8, Math.round(root.height * 0.012))
         z: 1000
     }

@@ -5,6 +5,7 @@ Rectangle {
 
     property var source: null
     readonly property bool active: Boolean(root.source && root.source.loaded)
+    readonly property string mode: root.source?.snapshot?.profile === "rmul1v1" ? "1v1" : "3v3"
     width: 350
     height: 70
     radius: 3
@@ -25,7 +26,7 @@ Rectangle {
             Text {
                 width: 67
                 anchors.verticalCenter: parent.verticalCenter
-                text: "本地模拟"
+                text: root.mode + " 模拟"
                 color: "#8fe2ae"
                 font.pixelSize: 11
                 font.bold: true
@@ -33,26 +34,26 @@ Rectangle {
             SimButton {
                 label: "基础"
                 active: root.active
-                    && root.source.scenarioId === "match_3v3_basic"
-                onTriggered: root.source.selectScenario("match_3v3_basic")
+                    && root.source.scenarioId === "match_" + root.mode + "_basic"
+                onTriggered: root.source.selectScenario("match_" + root.mode + "_basic")
             }
             SimButton {
                 label: "受伤"
                 active: root.active
-                    && root.source.scenarioId === "match_3v3_damage"
-                onTriggered: root.source.selectScenario("match_3v3_damage")
+                    && root.source.scenarioId === "match_" + root.mode + "_damage"
+                onTriggered: root.source.selectScenario("match_" + root.mode + "_damage")
             }
             SimButton {
                 label: "离线"
                 active: root.active
-                    && root.source.scenarioId === "match_3v3_offline"
-                onTriggered: root.source.selectScenario("match_3v3_offline")
+                    && root.source.scenarioId === "match_" + root.mode + "_offline"
+                onTriggered: root.source.selectScenario("match_" + root.mode + "_offline")
             }
             SimButton {
                 label: "结算"
                 active: root.active
-                    && root.source.scenarioId === "match_3v3_settlement"
-                onTriggered: root.source.selectScenario("match_3v3_settlement")
+                    && root.source.scenarioId === "match_" + root.mode + "_settlement"
+                onTriggered: root.source.selectScenario("match_" + root.mode + "_settlement")
             }
         }
 

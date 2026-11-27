@@ -660,7 +660,8 @@ bool parseInitialSnapshot(const QJsonObject &root,
                    error)) {
         return false;
     }
-    snapshot->profile = QStringLiteral("rmul3v3");
+    snapshot->profile = initial.value(QStringLiteral("profile"))
+        .toString(QStringLiteral("rmul3v3"));
     snapshot->isPaused =
         initial.value(QStringLiteral("isPaused")).toBool(false);
     snapshot->operatorRobotId =
@@ -754,6 +755,25 @@ bool applyRobotPatch(MatchRobotSnapshot *robot,
                      const QJsonObject &patch,
                      const QString &path,
                      QString *error) {
+    for (const auto &[key, target] :
+         std::initializer_list<std::pair<const char *, int *>>{
+             {"level", &robot->level}, {"experience", &robot->experience},
+             {"speedLockState", &robot->speedLockState},
+             {"speedLockSeconds", &robot->speedLockSeconds},
+             {"yellowCardCount", &robot->yellowCardCount},
+         }) {
+        if (!readPatchInt(patch, QString::fromLatin1(key), path, target, error))
+            return false;
+    }
+    if (!readPatchBool(patch, QStringLiteral("outOfCombat"), path,
+                       &robot->outOfCombat, error))
+        return false;
+    if (patch.contains(QStringLiteral("moduleStates")))
+        robot->moduleStates = patch.value(QStringLiteral("moduleStates")).toArray().toVariantList();
+    if (patch.contains(QStringLiteral("buffTimedData")))
+        robot->buffTimedData = patch.value(QStringLiteral("buffTimedData")).toObject().toVariantMap();
+    if (patch.contains(QStringLiteral("customData")))
+        robot->customData = patch.value(QStringLiteral("customData")).toObject().toVariantMap();
     if (!readPatchInt(patch, QStringLiteral("health"), path, &robot->health, error) ||
         !readPatchInt(patch,
                       QStringLiteral("maxHealth"),
@@ -794,6 +814,8 @@ bool applyRobotPatch(MatchRobotSnapshot *robot,
              {"chassisEnergyLimitJ", &robot->energy.chassisEnergyLimitJ},
              {"chassisPowerW", &robot->energy.chassisPowerW},
              {"chassisPowerLimitW", &robot->energy.chassisPowerLimitW},
+             {"muzzleVelocityMps", &robot->muzzleVelocityMps},
+             {"shootSpeedLimitMps", &robot->shootSpeedLimitMps},
          }) {
         if (!readPatchReal(patch,
                            QString::fromLatin1(key),
@@ -1322,11 +1344,14 @@ bool MockMatchSource::togglePause() {
 }
 
 bool MockMatchSource::cycleScenario(int direction) {
-    static const QStringList scenarios{
-        QStringLiteral("match_3v3_basic.json"),
-        QStringLiteral("match_3v3_damage.json"),
-        QStringLiteral("match_3v3_offline.json"),
-        QStringLiteral("match_3v3_settlement.json"),
+    const bool duel = m_session->matchSnapshot().profile == QStringLiteral("rmul1v1");
+    const QString mode = duel ? QStringLiteral("1v1") : QStringLiteral("3v3");
+    const QString prefix = QStringLiteral("match_%1_").arg(mode);
+    const QStringList scenarios{
+        prefix + QStringLiteral("basic.json"),
+        prefix + QStringLiteral("damage.json"),
+        prefix + QStringLiteral("offline.json"),
+        prefix + QStringLiteral("settlement.json"),
     };
 
     int currentIndex = -1;
@@ -1345,7 +1370,7 @@ bool MockMatchSource::cycleScenario(int direction) {
             (currentIndex + step + scenarios.size()) % scenarios.size();
     }
     const QString path =
-        QStringLiteral(":/mock/3v3/") + scenarios.at(currentIndex);
+        QStringLiteral(":/mock/%1/").arg(mode) + scenarios.at(currentIndex);
     return loadFromFile(path) && start();
 }
 
@@ -1355,6 +1380,10 @@ bool MockMatchSource::selectScenario(const QString &scenario) {
         QStringLiteral("match_3v3_damage"),
         QStringLiteral("match_3v3_offline"),
         QStringLiteral("match_3v3_settlement"),
+        QStringLiteral("match_1v1_basic"),
+        QStringLiteral("match_1v1_damage"),
+        QStringLiteral("match_1v1_offline"),
+        QStringLiteral("match_1v1_settlement"),
     };
     QString id = QFileInfo(scenario).completeBaseName();
     if (id.isEmpty()) {
@@ -1364,8 +1393,10 @@ bool MockMatchSource::selectScenario(const QString &scenario) {
         reportError(QStringLiteral("未知模拟场景：%1").arg(scenario));
         return false;
     }
+    const QString mode = id.startsWith(QStringLiteral("match_1v1_"))
+        ? QStringLiteral("1v1") : QStringLiteral("3v3");
     return loadFromFile(
-               QStringLiteral(":/mock/3v3/%1.json").arg(id)) &&
+               QStringLiteral(":/mock/%1/%2.json").arg(mode, id)) &&
         start();
 }
 

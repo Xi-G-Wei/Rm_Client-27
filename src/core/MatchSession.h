@@ -9,7 +9,7 @@
 
 namespace RM {
 
-// 与通信协议无关的 3v3 比赛领域模型。Mock、回放和后续真实协议适配器
+// 与通信协议无关的 RMUL 比赛领域模型。Mock、回放和后续真实协议适配器
 // 都应先生成 MatchSnapshot，再交给界面层消费。
 enum class MatchPhase {
     NotStarted,

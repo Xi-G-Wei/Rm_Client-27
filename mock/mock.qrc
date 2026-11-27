@@ -1,6 +1,10 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource prefix="/mock">
+        <file>1v1/match_1v1_basic.json</file>
+        <file>1v1/match_1v1_damage.json</file>
+        <file>1v1/match_1v1_offline.json</file>
+        <file>1v1/match_1v1_settlement.json</file>
         <file alias="3v3/match_3v3_basic.json">3v3/match_3v3_basic.json</file>
         <file alias="3v3/match_3v3_damage.json">3v3/match_3v3_damage.json</file>
         <file alias="3v3/match_3v3_offline.json">3v3/match_3v3_offline.json</file>

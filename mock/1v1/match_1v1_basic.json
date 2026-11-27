@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "id": "match_1v1_basic",
+  "name": "1v1 基础对战",
+  "durationSec": 60,
+  "initial": {
+    "matchId": "mock-1v1-basic",
+    "phase": "preparation",
+    "timeRemainingSec": 5,
+    "round": 1,
+    "operatorRobotId": "red-3",
+    "isPaused": false,
+    "redTeam": {
+      "name": "红方",
+      "score": 0,
+      "robots": [
+        {
+          "id": "red-3",
+          "slot": 3,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 10,
+          "heatLimit": 200,
+          "level": 3,
+          "experience": 68,
+          "maxExperience": 100,
+          "yellowCardCount": 0,
+          "muzzleVelocityMps": 23.5,
+          "shootSpeedLimitMps": 30,
+          "speedLockState": 0,
+          "speedLockSeconds": 0,
+          "online": true,
+          "alive": true,
+          "outOfCombat": false,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 74,
+            "bufferEnergyJ": 40,
+            "bufferEnergyLimitJ": 60,
+            "chassisEnergyJ": 80,
+            "chassisEnergyLimitJ": 120,
+            "chassisPowerW": 55,
+            "chassisPowerLimitW": 100
+          },
+          "chassis": {
+            "mode": "normal",
+            "driveType": "wheel_leg",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {
+            "telemetryAvailable": true,
+            "mode": "balance",
+            "stanceHeightMm": 240,
+            "pitchDegrees": 2.5,
+            "rollDegrees": -1,
+            "leftWheelSpeedMps": 1.2,
+            "rightWheelSpeedMps": 1.1,
+            "joints": [
+              {
+                "name": "left_hip",
+                "angleDegrees": 12,
+                "targetAngleDegrees": 15
+              },
+              {
+                "name": "right_hip",
+                "angleDegrees": -10,
+                "targetAngleDegrees": -8
+              }
+            ]
+          },
+          "moduleStates": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          "moduleData": [
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": false,
+              "state": 1
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": false,
+              "state": 2
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            }
+          ],
+          "buffTimedData": {
+            "attack": {
+              "type": 1,
+              "level": 2,
+              "maxTime": 15,
+              "leftTime": 9
+            },
+            "cooling": {
+              "type": 3,
+              "level": 1,
+              "maxTime": 20,
+              "leftTime": 14
+            },
+            "recovery": {
+              "type": 5,
+              "level": 1,
+              "maxTime": 10,
+              "leftTime": 6
+            }
+          },
+          "customData": {
+            "fricEnabled": true,
+            "rammerEnabled": false,
+            "chassisMode": 1,
+            "spinMode": false,
+            "followMode": true,
+            "chassisProtect": false,
+            "chassisWarning": false,
+            "superCapEnergy": 74,
+            "gimbalChassisAngle": 12.5,
+            "targetDistance": 12,
+            "ballisticCompensation": -2
+          },
+          "position": {
+            "x": 0.25,
+            "y": 0.5,
+            "headingDegrees": 0
+          }
+        }
+      ]
+    },
+    "blueTeam": {
+      "name": "蓝方",
+      "score": 0,
+      "robots": [
+        {
+          "id": "blue-3",
+          "slot": 3,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 0,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 69,
+            "bufferEnergyJ": 39,
+            "bufferEnergyLimitJ": 60,
+            "chassisEnergyJ": 76,
+            "chassisEnergyLimitJ": 120,
+            "chassisPowerW": 50,
+            "chassisPowerLimitW": 100
+          },
+          "chassis": {
+            "mode": "normal",
+            "driveType": "wheel_leg",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {
+            "telemetryAvailable": true,
+            "mode": "balance",
+            "stanceHeightMm": 230,
+            "pitchDegrees": -1.5,
+            "rollDegrees": 0.8,
+            "leftWheelSpeedMps": -0.8,
+            "rightWheelSpeedMps": -0.7,
+            "joints": []
+          },
+          "position": {
+            "x": 0.75,
+            "y": 0.5,
+            "headingDegrees": 180
+          }
+        }
+      ]
+    },
+    "profile": "rmul1v1"
+  },
+  "timeline": [
+    {
+      "atSec": 0,
+      "events": [
+        {
+          "type": "preparation",
+          "message": "1v1 本地演示：双方各一台步兵"
+        }
+      ]
+    },
+    {
+      "atSec": 2,
+      "phase": "self_check",
+      "timeRemainingSec": 15,
+      "events": [
+        {
+          "type": "self_check",
+          "message": "裁判系统自检演示"
+        }
+      ]
+    },
+    {
+      "atSec": 7,
+      "phase": "countdown",
+      "timeRemainingSec": 5
+    },
+    {
+      "atSec": 12,
+      "phase": "battle",
+      "timeRemainingSec": 120,
+      "events": [
+        {
+          "type": "battle",
+          "message": "1v1 对战开始，按住左键体验射击"
+        }
+      ]
+    },
+    {
+      "atSec": 18,
+      "robotUpdates": [
+        {
+          "id": "red-3",
+          "chassisMode": "spin",
+          "wheelLegMode": "transition",
+          "superCapPercent": 38,
+          "chassisPowerW": 97,
+          "mapX": 0.4,
+          "mapY": 0.35
+        }
+      ],
+      "events": [
+        {
+          "type": "power",
+          "message": "本机小陀螺 / 低超电演示"
+        }
+      ]
+    },
+    {
+      "atSec": 25,
+      "robotUpdates": [
+        {
+          "id": "red-3",
+          "health": 260,
+          "moduleStates": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "buffTimedData": {
+            "cooling": {
+              "type": 3,
+              "level": 2,
+              "maxTime": 0,
+              "leftTime": 0
+            }
+          },
+          "customData": {
+            "fricEnabled": true,
+            "rammerEnabled": true,
+            "chassisMode": 2
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "damage",
+          "message": "本机受伤，模块异常与冷却增益演示"
+        }
+      ]
+    },
+    {
+      "atSec": 35,
+      "robotUpdates": [
+        {
+          "id": "blue-3",
+          "health": 100,
+          "mapX": 0.58,
+          "mapY": 0.4
+        }
+      ],
+      "events": [
+        {
+          "type": "damage",
+          "message": "对手剩余血量变化"
+        }
+      ]
+    },
+    {
+      "atSec": 45,
+      "robotUpdates": [
+        {
+          "id": "red-3",
+          "health": 200,
+          "chassisMode": "follow",
+          "wheelLegMode": "balance",
+          "superCapPercent": 65,
+          "chassisPowerW": 42
+        }
+      ],
+      "events": [
+        {
+          "type": "system",
+          "message": "底盘恢复跟随 / 轮腿平衡"
+        }
+      ]
+    },
+    {
+      "atSec": 60,
+      "phase": "settlement",
+      "timeRemainingSec": 0,
+      "redScore": 1,
+      "blueScore": 0,
+      "events": [
+        {
+          "type": "score",
+          "message": "1v1 演示结算（演示比分，不代表规则判胜）"
+        }
+      ]
+    }
+  ]
+}

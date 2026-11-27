@@ -311,18 +311,20 @@ void validateRobot(QList<MatchValidationIssue> *issues,
 void validateTeam(QList<MatchValidationIssue> *issues,
                   const MatchTeamSnapshot &team,
                   MatchSide side,
-                  const QString &path) {
+                  const QString &path,
+                  int expectedRobots) {
     if (team.name.trimmed().isEmpty()) {
         addIssue(issues,
                  MatchValidationSeverity::Warning,
                  path + QStringLiteral(".name"),
                  QStringLiteral("队伍名称为空，界面将使用默认名称"));
     }
-    if (team.robots.size() != 3) {
+    if (team.robots.size() != expectedRobots) {
         addIssue(issues,
                  MatchValidationSeverity::Error,
                  path + QStringLiteral(".robots"),
-                 QStringLiteral("3v3 每队必须恰好包含 3 台机器人"));
+                 QStringLiteral("当前赛项每队必须恰好包含 %1 台机器人")
+                     .arg(expectedRobots));
     }
     validateMetric(issues, path + QStringLiteral(".economy"),
                    team.economy, true);
@@ -665,11 +667,12 @@ QList<MatchValidationIssue> validateMatchSnapshot(
                  QStringLiteral("matchId"),
                  QStringLiteral("比赛 ID 不能为空"));
     }
-    if (snapshot.profile != QStringLiteral("rmul3v3")) {
+    if (snapshot.profile != QStringLiteral("rmul3v3") &&
+        snapshot.profile != QStringLiteral("rmul1v1")) {
         addIssue(&issues,
                  MatchValidationSeverity::Error,
                  QStringLiteral("profile"),
-                 QStringLiteral("第一阶段仅接受 rmul3v3 比赛快照"));
+                 QStringLiteral("仅接受 rmul3v3 或 rmul1v1 比赛快照"));
     }
     if (snapshot.timeRemainingSec < 0) {
         addIssue(&issues,
@@ -693,11 +696,13 @@ QList<MatchValidationIssue> validateMatchSnapshot(
     validateTeam(&issues,
                  snapshot.redTeam,
                  MatchSide::Red,
-                 QStringLiteral("redTeam"));
+                 QStringLiteral("redTeam"),
+                 snapshot.profile == QStringLiteral("rmul1v1") ? 1 : 3);
     validateTeam(&issues,
                  snapshot.blueTeam,
                  MatchSide::Blue,
-                 QStringLiteral("blueTeam"));
+                 QStringLiteral("blueTeam"),
+                 snapshot.profile == QStringLiteral("rmul1v1") ? 1 : 3);
 
     QSet<QString> robotIds;
     const auto collectIds = [&](const MatchTeamSnapshot &team) {

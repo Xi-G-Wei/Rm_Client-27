@@ -251,7 +251,22 @@ QVariantMap MatchUiProjection::dashboardData() const {
         leadingSide = 2;
         leadText = sourcePrefix + QStringLiteral(" · 蓝方领先");
     }
+    const auto totalHealth = [](const MatchTeamSnapshot &team) {
+        int total = 0;
+        for (const auto &robot : team.robots) {
+            if (robot.health < 0)
+                return -1;
+            total += robot.health;
+        }
+        return total;
+    };
     return {
+        {QStringLiteral("redHealth"), totalHealth(snapshot.redTeam)},
+        {QStringLiteral("blueHealth"), totalHealth(snapshot.blueTeam)},
+        {QStringLiteral("redDamage"), snapshot.redTeam.totalDamage},
+        {QStringLiteral("blueDamage"), snapshot.blueTeam.totalDamage},
+        {QStringLiteral("redControl"), snapshot.redTeam.controlPoints},
+        {QStringLiteral("blueControl"), snapshot.blueTeam.controlPoints},
         {QStringLiteral("redRobots"), robotCards(snapshot.redTeam)},
         {QStringLiteral("blueRobots"), robotCards(snapshot.blueTeam)},
         {QStringLiteral("leadingSide"), leadingSide},
@@ -286,7 +301,9 @@ QVariantMap MatchUiProjection::headerData() const {
             ? QStringLiteral("录像回放")
             : QStringLiteral("本地模拟");
     return {
-        {QStringLiteral("matchMode"), QStringLiteral("3v3 %1").arg(sourceLabel)},
+        {QStringLiteral("matchMode"), QStringLiteral("%1 %2")
+             .arg(snapshot.profile == QStringLiteral("rmul1v1")
+                      ? QStringLiteral("1v1") : QStringLiteral("3v3"), sourceLabel)},
         {QStringLiteral("redScore"), snapshot.redTeam.score},
         {QStringLiteral("blueScore"), snapshot.blueTeam.score},
         {QStringLiteral("currentRound"), snapshot.round},
@@ -405,7 +422,9 @@ QVariantMap MatchUiProjection::mapData() const {
          positionedRobots(allyRed ? snapshot.blueTeam : snapshot.redTeam, false)},
         {QStringLiteral("focusTargetId"), QString()},
         {QStringLiteral("mapImageSource"),
-         QStringLiteral("qrc:/images/rmul3v3.png")},
+         snapshot.profile == QStringLiteral("rmul1v1")
+             ? QStringLiteral("qrc:/images/rmul1v1.png")
+             : QStringLiteral("qrc:/images/rmul3v3.png")},
         {QStringLiteral("routes"), QVariantList{}},
         {QStringLiteral("dangerZones"), QVariantList{}},
         {QStringLiteral("buffZones"), QVariantList{}},
@@ -472,15 +491,16 @@ bool MatchUiProjection::hasBases() const {
 }
 
 bool MatchUiProjection::hasControlPoints() const {
-    return true;
+    return !m_session ||
+        m_session->matchSnapshot().profile != QStringLiteral("rmul1v1");
 }
 
 double MatchUiProjection::fieldWidth() const {
-    return 12.0;
+    return hasControlPoints() ? 12.0 : 5.0;
 }
 
 double MatchUiProjection::fieldHeight() const {
-    return 8.0;
+    return hasControlPoints() ? 8.0 : 5.0;
 }
 
 int MatchUiProjection::remainingTime() const {
@@ -603,7 +623,8 @@ int MatchUiProjection::maxlevel() const {
 }
 
 int MatchUiProjection::robotId() const {
-    return operatorRobot().slot;
+    const auto robot = operatorRobot();
+    return robot.slot + (robot.side == MatchSide::Blue ? 100 : 0);
 }
 
 int MatchUiProjection::currentExp() const {
@@ -702,6 +723,8 @@ QVariantMap MatchUiProjection::myRobot() const {
         {QStringLiteral("isOutOfCombat"),
          robot.online && robot.alive && robot.outOfCombat},
         {QStringLiteral("isRedTeam"), robot.side == MatchSide::Red},
+        {QStringLiteral("ammo"), robot.ammo},
+        {QStringLiteral("chassisPowerW"), robot.energy.chassisPowerW},
         {QStringLiteral("currentHeat"), qMax(0, robot.heat)},
         {QStringLiteral("heatLimit"),
          robot.heatLimit > 0 ? robot.heatLimit : 240},

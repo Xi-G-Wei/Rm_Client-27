@@ -2466,16 +2466,18 @@ void MainWindow::createCenterArea() {
              !m_mockMatchSource) {
     QString scenarioPath = qEnvironmentVariable("RM_UI_FIRST_SCENARIO");
     if (scenarioPath.trimmed().isEmpty()) {
-      scenarioPath =
-          QStringLiteral(":/mock/3v3/match_3v3_basic.json");
+      scenarioPath = m_gameData->matchProfile() == RM::MatchProfile::Rmul1v1
+          ? QStringLiteral(":/mock/1v1/match_1v1_basic.json")
+          : QStringLiteral(":/mock/3v3/match_3v3_basic.json");
     } else if (scenarioPath.startsWith(QStringLiteral("qrc:"))) {
       scenarioPath = QLatin1Char(':') + scenarioPath.mid(4);
     } else if (!scenarioPath.startsWith(QLatin1Char(':')) &&
                !scenarioPath.startsWith(QLatin1Char('/'))) {
       if (!scenarioPath.endsWith(QStringLiteral(".json")))
         scenarioPath += QStringLiteral(".json");
-      scenarioPath =
-          QStringLiteral(":/mock/3v3/") + scenarioPath;
+      const QString mode = scenarioPath.startsWith(QStringLiteral("match_1v1_"))
+          ? QStringLiteral("1v1") : QStringLiteral("3v3");
+      scenarioPath = QStringLiteral(":/mock/%1/").arg(mode) + scenarioPath;
     }
 
     if (m_matchSourceController->selectMock(scenarioPath)) {
@@ -2523,10 +2525,32 @@ void MainWindow::createCenterArea() {
         this,
         m_matchSourceController->sourceKind());
   }
+  if (m_matchUiProjection && (m_matchUiProjection->mockMode() ||
+                              m_matchUiProjection->replayMode())) {
+    const auto syncSimulatedProfile = [this]() {
+      const auto *session = m_matchSourceController->matchSession();
+      if (!session || !session->isValid())
+        return;
+      const auto profile = RM::parseMatchProfile(session->matchSnapshot().profile);
+      m_gameData->setMatchProfile(profile);
+      const int robotId = m_matchUiProjection->robotId();
+      if (robotId > 0 && robotId <= 107) {
+        m_gameData->setCurrentRobotId(static_cast<quint8>(robotId));
+        m_selectedRobotTypeFromSettings = settingsRobotTypeLabel(robotId);
+      }
+    };
+    connect(m_matchSourceController->matchSession(),
+            &RM::MatchSession::snapshotChanged, this, syncSimulatedProfile);
+    syncSimulatedProfile();
+  }
   if (m_qmlCentralAimingHUD &&
       m_qmlCentralAimingHUD->rootObject() &&
       m_matchUiProjection) {
     m_qmlCentralAimingHUD->rootObject()->setProperty(
+        "matchUiSource", QVariant::fromValue(m_matchUiProjection));
+  }
+  if (m_qmlGunnerOverlay && m_qmlGunnerOverlay->rootObject()) {
+    m_qmlGunnerOverlay->rootObject()->setProperty(
         "matchUiSource", QVariant::fromValue(m_matchUiProjection));
   }
   if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {
@@ -8335,6 +8359,15 @@ void MainWindow::onMatchProfileRequested(int index) {
   if (!m_gameData || index < 0 || index > static_cast<int>(RM::MatchProfile::Rmul1v1)
       || index == m_gameData->matchProfileIndex())
     return;
+
+  if (m_mockMatchSource) {
+    if (index == static_cast<int>(RM::MatchProfile::Rmul1v1))
+      m_mockMatchSource->selectScenario(QStringLiteral("match_1v1_basic"));
+    else if (index == static_cast<int>(RM::MatchProfile::Rmul3v3))
+      m_mockMatchSource->selectScenario(QStringLiteral("match_3v3_basic"));
+    syncSettingsPanelState();
+    return;
+  }
 
   resetKeyboardMouseControlState(true);
 #ifdef RM_HAS_MQTT

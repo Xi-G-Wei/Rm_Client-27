@@ -37,10 +37,10 @@ class MatchUiProjection : public QObject {
     Q_PROPERTY(QString layoutMode READ layoutMode NOTIFY updated)
 
     // DashboardMatchHeader 使用的 GameData 兼容字段。
-    Q_PROPERTY(bool hasBases READ hasBases CONSTANT)
-    Q_PROPERTY(bool hasControlPoints READ hasControlPoints CONSTANT)
-    Q_PROPERTY(double fieldWidth READ fieldWidth CONSTANT)
-    Q_PROPERTY(double fieldHeight READ fieldHeight CONSTANT)
+    Q_PROPERTY(bool hasBases READ hasBases NOTIFY updated)
+    Q_PROPERTY(bool hasControlPoints READ hasControlPoints NOTIFY updated)
+    Q_PROPERTY(double fieldWidth READ fieldWidth NOTIFY updated)
+    Q_PROPERTY(double fieldHeight READ fieldHeight NOTIFY updated)
     Q_PROPERTY(int remainingTime READ remainingTime NOTIFY updated)
     Q_PROPERTY(int redScore READ redScore NOTIFY updated)
     Q_PROPERTY(int blueScore READ blueScore NOTIFY updated)

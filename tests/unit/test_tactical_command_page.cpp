@@ -2,6 +2,7 @@
 #include "ui/MatchUiProjection.h"
 
 #include <QJSValue>
+#include <QDir>
 #include <QPointer>
 #include <QQmlComponent>
 #include <QQmlContext>
@@ -82,6 +83,138 @@ class TestTacticalCommandPage : public QObject {
   Q_OBJECT
 
 private slots:
+  void testDuelUiAndModeSwitch_data() {
+    QTest::addColumn<QSize>("viewport");
+    QTest::newRow("720p") << QSize(1280, 720);
+    QTest::newRow("1080p") << QSize(1920, 1080);
+  }
+
+  void testDuelUiAndModeSwitch() {
+    QFETCH(QSize, viewport);
+    RM::MockMatchSource source;
+    QVERIFY(source.selectScenario("match_1v1_basic"));
+    RM::MatchUiProjection projection(source.matchSession());
+    QQuickView view;
+    view.rootContext()->setContextProperty("mockUiSource", &projection);
+    view.rootContext()->setContextProperty("mockMatchSource", &source);
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.resize(viewport);
+    view.setSource(QUrl("qrc:/qml/Tactical/TacticalCommandPage.qml"));
+    QVERIFY2(view.status() == QQuickView::Ready,
+             qPrintable(view.errors().isEmpty() ? QString() : view.errors()[0].toString()));
+    view.show();
+    auto *page = view.rootObject();
+    QTRY_VERIFY(page->property("commandDashboardActive").toBool());
+    QCOMPARE(page->property("tacticalMapBackgroundSource").toString(),
+             QStringLiteral("qrc:/images/rmul1v1.png"));
+    auto *map = page->findChild<QQuickItem *>("commandDashboardMap");
+    QVERIFY(map);
+    auto *controls = page->findChild<QQuickItem *>("mockScenarioPanel");
+    auto *clockWell = page->findChild<QQuickItem *>("dashboardClockWell");
+    auto *roster = page->findChild<QQuickItem *>("commandRedRoster");
+    QVERIFY(controls && clockWell && roster);
+    QTRY_VERIFY(roster->width() >= 280);
+    const auto panelRect = controls->mapRectToItem(page, controls->boundingRect());
+    const auto clockRect = clockWell->mapRectToItem(page, clockWell->boundingRect());
+    QVERIFY(!panelRect.intersects(clockRect));
+    QCOMPARE(map->property("fieldWidth").toReal(), 5.0);
+    QCOMPARE(map->property("fieldHeight").toReal(), 5.0);
+    QCOMPARE(projection.dashboardData()["redRobots"].toList().size(), 1);
+    QVERIFY(source.advanceByMs(12000));
+    QVERIFY(source.pause());
+    auto *clock = page->findChild<QObject *>("dashboardMatchClock");
+    QVERIFY(clock);
+    QTRY_COMPARE(clock->property("text").toString(), QStringLiteral("02:00"));
+    const QString screenshotDir = qEnvironmentVariable("RM_1V1_SCREENSHOT_DIR");
+    if (!screenshotDir.isEmpty()) {
+      QDir().mkpath(screenshotDir);
+      QTest::qWait(100);
+      QVERIFY(view.grabWindow().save(screenshotDir + "/duel-" + QString::number(viewport.width()) + ".png"));
+    }
+    QVERIFY(source.selectScenario("match_3v3_basic"));
+    QTRY_COMPARE(map->property("fieldWidth").toReal(), 12.0);
+    QVERIFY(source.selectScenario("match_1v1_damage"));
+    QTRY_COMPARE(map->property("fieldWidth").toReal(), 5.0);
+    QVERIFY(source.advanceByMs(5000));
+    QVERIFY(source.pause());
+    QCOMPARE(projection.currentHealth(), 180);
+    QCOMPARE(projection.dashboardData()["redHealth"].toInt(), 180);
+    QVERIFY(QMetaObject::invokeMethod(page, "selectRobot",
+            Q_ARG(QVariant, QVariant("blue-3")), Q_ARG(QVariant, true)));
+    auto *details = page->findChild<QQuickItem *>("commandSelectedRobotPanel");
+    QVERIFY(details);
+    QTRY_VERIFY(details->isVisible());
+    QVERIFY(source.selectScenario("match_1v1_settlement"));
+    QVERIFY(source.advanceByMs(12000));
+    auto *banner = page->findChild<QQuickItem *>("mockSettlementBanner");
+    QVERIFY(banner);
+    QTRY_VERIFY(banner->isVisible());
+  }
+
+  void testDuelPilotShootingAndBlueIdentity() {
+    RM::MockMatchSource source;
+    QVERIFY(source.selectScenario("match_1v1_basic"));
+    RM::MatchUiProjection projection(source.matchSession());
+    QQuickView view;
+    view.rootContext()->setContextProperty("duelProjection", &projection);
+    QQmlComponent component(view.engine());
+    component.setData(
+        "\n"
+        "      import QtQuick\n"
+        "      import \"qrc:/qml\" as Hud\n"
+        "      import \"qrc:/qml/CustomUI\" as Custom\n"
+        "      Item {\n"
+        "        width: 1280; height: 720\n"
+        "        Rectangle { anchors.fill: parent; color: \"#02070d\" }\n"
+        "        Hud.TopInfoBar {\n"
+        "          width: parent.width\n"
+        "          tacticalSource: duelProjection; uiFirstSource: duelProjection\n"
+        "        }\n"
+        "        Hud.CentralAimingHUD {\n"
+        "          objectName: \"duelPilotAiming\"\n"
+        "          anchors.centerIn: parent\n"
+        "          matchUiSource: duelProjection\n"
+        "        }\n"
+        "        Hud.LeftBottomPanel { anchors.left: parent.left; anchors.bottom: parent.bottom }\n"
+        "        Item {\n"
+        "          anchors.fill: parent; anchors.topMargin: 180\n"
+        "          Custom.GunnerOverlay { matchUiSource: duelProjection }\n"
+        "        }\n"
+        "      }\n"
+        "    \n", QUrl("qrc:/duel-pilot-test.qml"));
+    view.rootContext()->setContextProperty("mockUiSource", &projection);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    auto *root = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    view.setContent(QUrl(), &component, root);
+    view.resize(1280, 720);
+    view.show();
+    auto *aiming = root->findChild<QQuickItem *>("duelPilotAiming");
+    auto *card = root->findChild<QQuickItem *>("pilotVehicleCard");
+    QVERIFY(aiming && card);
+    QCOMPARE(card->property("number").toInt(), 3);
+    QCOMPARE(card->property("blue").toBool(), false);
+    QVERIFY(source.advanceByMs(12000));
+    QVERIFY(source.setTriggerHeld(true));
+    QVERIFY(source.advanceByMs(2000));
+    QVERIFY(source.setTriggerHeld(false));
+    QTRY_VERIFY(aiming->property("currentHeat").toReal() > 0);
+    QVERIFY(source.pause());
+    const QString dir = qEnvironmentVariable("RM_1V1_SCREENSHOT_DIR");
+    if (!dir.isEmpty()) {
+      QDir().mkpath(dir);
+      QTest::qWait(100);
+      QVERIFY(view.grabWindow().save(dir + "/duel-pilot.png"));
+    }
+    auto snapshot = source.matchSession()->matchSnapshot();
+    snapshot.operatorRobotId = "blue-3";
+    snapshot.redTeam.robots[0].telemetryScope = RM::MatchTelemetryScope::Public;
+    snapshot.blueTeam.robots[0].telemetryScope = RM::MatchTelemetryScope::Private;
+    QVERIFY(source.matchSession()->replaceSnapshot(snapshot));
+    QTRY_COMPARE(card->property("blue").toBool(), true);
+    QCOMPARE(projection.robotId(), 103);
+  }
+
   void initTestCase() {
     Q_INIT_RESOURCE(qml);
     Q_INIT_RESOURCE(resources);

@@ -12,6 +12,7 @@ Item {
     readonly property var dashboard: pageRoot.dataSource.dashboardData || ({})
     readonly property var game: pageRoot.tacticalGameContext
     readonly property bool bases: Boolean(game?.hasBases)
+    readonly property bool duel: !root.bases && !Boolean(game?.hasControlPoints)
     readonly property bool summary: pageRoot.commandSummaryMode
     readonly property bool cameraPriority: pageRoot.videoPrimary
     readonly property string profileName: bases ? "超级对抗赛"
@@ -27,8 +28,8 @@ Item {
     readonly property int gap: compact ? 7 : 8
     readonly property int sideFooterHeight: compact ? Math.max(138, Math.min(205, Math.round(width * 0.103 + 24)))
         : Math.max(145, Math.min(320, Math.round(width * 0.11 + 36)))
-    readonly property int redRosterWidth: Math.max(174, Math.round(width * 0.148))
-    readonly property int blueRosterWidth: Math.max(206, Math.round(width * 0.1815))
+    readonly property int redRosterWidth: Math.max(root.duel ? 280 : 174, Math.round(width * 0.148))
+    readonly property int blueRosterWidth: Math.max(root.duel ? 280 : 206, Math.round(width * 0.1815))
     function eventRows(limit) {
         const events = []
         const territory = root.game?.territoryStatus
@@ -770,12 +771,12 @@ Item {
         spacing: 2
         RowLayout {
             Layout.fillWidth: true
-            Text { Layout.fillWidth: true; text: Format.number(comparison.red); color: root.redAccent; font.bold: true; font.family: "Bahnschrift"; font.pixelSize: 14 }
+            Text { Layout.fillWidth: true; text: comparison.red >= 0 ? Format.number(comparison.red) : "—"; color: root.redAccent; font.bold: true; font.family: "Bahnschrift"; font.pixelSize: 14 }
             Text { text: comparison.label; color: "#e7f0f8"; font.pixelSize: 12; font.weight: Font.DemiBold }
             Text {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignRight
-                text: Format.number(comparison.blue)
+                text: comparison.blue >= 0 ? Format.number(comparison.blue) : "—"
                 color: root.blueAccent
                 font.bold: true
                 font.family: "Bahnschrift"
@@ -807,7 +808,7 @@ Item {
                 ctx.clip()
                 ctx.fillStyle = "#394a57"
                 ctx.fillRect(0, 0, width, height)
-                if (total > 0) {
+                if (total > 0 && comparison.red >= 0 && comparison.blue >= 0) {
                     const split = width * Number(comparison.red) / total
                     if (comparison.red > 0) {
                         const red = ctx.createLinearGradient(0, 0, 0, height)

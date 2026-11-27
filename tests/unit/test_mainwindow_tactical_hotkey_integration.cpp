@@ -3,6 +3,7 @@
 #include "widgets/GameResultWidget.h"
 #include "widgets/HeroVideoWidget.h"
 #include "widgets/VideoBackgroundWidget.h"
+#include "simulator/MockMatchSource.h"
 
 #include <QApplication>
 #include <QDir>
@@ -48,6 +49,37 @@ class TestMainWindowTacticalHotkeyIntegration : public QObject {
   Q_OBJECT
 
 private slots:
+  void testDuelMockStartupAndSwitching() {
+    qputenv("RM_MATCH_PROFILE", "rmul1v1");
+    qputenv("RM_UI_FIRST_MOCK", "1");
+    qputenv("RM_START_VIEW", "video");
+    const auto restore = qScopeGuard([] {
+      qputenv("RM_MATCH_PROFILE", "legacy2026");
+      qunsetenv("RM_UI_FIRST_MOCK");
+      qunsetenv("RM_START_VIEW");
+    });
+    RM::MainWindow window;
+    window.resize(1280, 720);
+    auto *data = window.findChild<GameData *>();
+    auto *mock = window.findChild<RM::MockMatchSource *>();
+    QVERIFY(data && mock);
+    QCOMPARE(data->matchProfile(), RM::MatchProfile::Rmul1v1);
+    QCOMPARE(data->currentRobotId(), 3);
+    QCOMPARE(mock->matchSession()->matchSnapshot().profile,
+             QStringLiteral("rmul1v1"));
+    auto *vehicle = window.findChild<QQuickWidget *>("pilotVehiclePanel");
+    QVERIFY(vehicle && vehicle->rootObject());
+    auto *card = findVisualItem(vehicle->rootObject(), "pilotVehicleCard");
+    QVERIFY(card);
+    QCOMPARE(card->property("number").toInt(), 3);
+    QVERIFY(mock->selectScenario("match_3v3_basic"));
+    QCOMPARE(data->matchProfile(), RM::MatchProfile::Rmul3v3);
+    QVERIFY(QMetaObject::invokeMethod(&window, "onMatchProfileRequested",
+        Q_ARG(int, static_cast<int>(RM::MatchProfile::Rmul1v1))));
+    QCOMPARE(data->matchProfile(), RM::MatchProfile::Rmul1v1);
+    QCOMPARE(mock->scenarioId(), QStringLiteral("match_1v1_basic"));
+  }
+
   void initTestCase() {
     qputenv("RM_DISABLE_AUDIO", "1");
     qputenv("RM_MATCH_PROFILE", "legacy2026");
@@ -55,10 +87,12 @@ private slots:
     qunsetenv("RM_S1_ENGINE_HOST");
     Q_INIT_RESOURCE(qml);
     Q_INIT_RESOURCE(resources);
+    Q_INIT_RESOURCE(mock);
   }
 
   void cleanupTestCase() {
     qunsetenv("RM_MATCH_PROFILE");
+    Q_CLEANUP_RESOURCE(mock);
     Q_CLEANUP_RESOURCE(resources);
     Q_CLEANUP_RESOURCE(qml);
   }

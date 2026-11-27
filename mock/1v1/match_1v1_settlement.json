@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "id": "match_1v1_settlement",
+  "name": "1v1 结算",
+  "durationSec": 12,
+  "initial": {
+    "matchId": "match_1v1_settlement",
+    "phase": "battle",
+    "timeRemainingSec": 10,
+    "round": 1,
+    "operatorRobotId": "red-3",
+    "isPaused": false,
+    "redTeam": {
+      "name": "红方",
+      "score": 0,
+      "robots": [
+        {
+          "id": "red-3",
+          "slot": 3,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 10,
+          "heatLimit": 200,
+          "level": 3,
+          "experience": 68,
+          "maxExperience": 100,
+          "yellowCardCount": 0,
+          "muzzleVelocityMps": 23.5,
+          "shootSpeedLimitMps": 30,
+          "speedLockState": 0,
+          "speedLockSeconds": 0,
+          "online": true,
+          "alive": true,
+          "outOfCombat": false,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 74,
+            "bufferEnergyJ": 40,
+            "bufferEnergyLimitJ": 60,
+            "chassisEnergyJ": 80,
+            "chassisEnergyLimitJ": 120,
+            "chassisPowerW": 55,
+            "chassisPowerLimitW": 100
+          },
+          "chassis": {
+            "mode": "normal",
+            "driveType": "wheel_leg",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {
+            "telemetryAvailable": true,
+            "mode": "balance",
+            "stanceHeightMm": 240,
+            "pitchDegrees": 2.5,
+            "rollDegrees": -1,
+            "leftWheelSpeedMps": 1.2,
+            "rightWheelSpeedMps": 1.1,
+            "joints": [
+              {
+                "name": "left_hip",
+                "angleDegrees": 12,
+                "targetAngleDegrees": 15
+              },
+              {
+                "name": "right_hip",
+                "angleDegrees": -10,
+                "targetAngleDegrees": -8
+              }
+            ]
+          },
+          "moduleStates": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          "moduleData": [
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": false,
+              "state": 1
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": false,
+              "state": 2
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            },
+            {
+              "online": true,
+              "state": 0
+            }
+          ],
+          "buffTimedData": {
+            "attack": {
+              "type": 1,
+              "level": 2,
+              "maxTime": 15,
+              "leftTime": 9
+            },
+            "cooling": {
+              "type": 3,
+              "level": 1,
+              "maxTime": 20,
+              "leftTime": 14
+            },
+            "recovery": {
+              "type": 5,
+              "level": 1,
+              "maxTime": 10,
+              "leftTime": 6
+            }
+          },
+          "customData": {
+            "fricEnabled": true,
+            "rammerEnabled": false,
+            "chassisMode": 1,
+            "spinMode": false,
+            "followMode": true,
+            "chassisProtect": false,
+            "chassisWarning": false,
+            "superCapEnergy": 74,
+            "gimbalChassisAngle": 12.5,
+            "targetDistance": 12,
+            "ballisticCompensation": -2
+          },
+          "position": {
+            "x": 0.25,
+            "y": 0.5,
+            "headingDegrees": 0
+          }
+        }
+      ]
+    },
+    "blueTeam": {
+      "name": "蓝方",
+      "score": 0,
+      "robots": [
+        {
+          "id": "blue-3",
+          "slot": 3,
+          "role": "infantry",
+          "health": 400,
+          "maxHealth": 400,
+          "ammo": 150,
+          "heat": 0,
+          "heatLimit": 200,
+          "online": true,
+          "alive": true,
+          "respawnRemainingSec": 0,
+          "energy": {
+            "superCapPercent": 69,
+            "bufferEnergyJ": 39,
+            "bufferEnergyLimitJ": 60,
+            "chassisEnergyJ": 76,
+            "chassisEnergyLimitJ": 120,
+            "chassisPowerW": 50,
+            "chassisPowerLimitW": 100
+          },
+          "chassis": {
+            "mode": "normal",
+            "driveType": "wheel_leg",
+            "enabled": true,
+            "enabledReported": true,
+            "overpowerLockRemainingSec": 0
+          },
+          "wheelLeg": {
+            "telemetryAvailable": true,
+            "mode": "balance",
+            "stanceHeightMm": 230,
+            "pitchDegrees": -1.5,
+            "rollDegrees": 0.8,
+            "leftWheelSpeedMps": -0.8,
+            "rightWheelSpeedMps": -0.7,
+            "joints": []
+          },
+          "position": {
+            "x": 0.75,
+            "y": 0.5,
+            "headingDegrees": 180
+          }
+        }
+      ]
+    },
+    "profile": "rmul1v1"
+  },
+  "timeline": [
+    {
+      "atSec": 0,
+      "events": [
+        {
+          "type": "battle",
+          "message": "1v1 结算演示"
+        }
+      ]
+    },
+    {
+      "atSec": 10,
+      "phase": "settlement",
+      "timeRemainingSec": 0,
+      "redScore": 0,
+      "blueScore": 1,
+      "events": [
+        {
+          "type": "score",
+          "message": "蓝方获胜演示"
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,7 @@
 #include "simulator/MatchRecorder.h"
 #include "simulator/MatchReplaySource.h"
 #include "simulator/MockMatchSource.h"
+#include "ui/MatchUiProjection.h"
 
 #include <QDateTime>
 #include <QTemporaryDir>
@@ -15,6 +16,52 @@ class TestMatchSourceBoundary : public QObject {
     Q_OBJECT
 
 private slots:
+    void duelRealDataAndReplayUseSameUiContract() {
+        GameData data;
+        data.setMatchProfile(RM::MatchProfile::Rmul1v1);
+        data.setCurrentRobotId(103);
+        data.updateGameStateFromS1(4, 120, 0, 0, 1, false);
+        auto &blue = data.getRobotDataRef(103);
+        blue.currentHP = 300;
+        blue.maxHP = 400;
+        blue.status = RobotStatus::NORMAL;
+        blue.isClientConnected = true;
+        blue.currentHeat = 40;
+        blue.heatLimit = 200;
+        blue.allowedAmmo17mm = 80;
+        RM::GameDataMatchSource real(&data);
+        QVERIFY2(real.isAvailable(), qPrintable(real.statusText()));
+        RM::MatchUiProjection ui(real.matchSession(), nullptr, "real");
+        QCOMPARE(ui.robotId(), 103);
+        QCOMPARE(ui.currentHealth(), 300);
+        QCOMPARE(ui.fieldWidth(), 5.0);
+        QVERIFY(!ui.hasControlPoints());
+        QCOMPARE(ui.allyRobotList().size(), 1);
+        QCOMPARE(ui.enemyRobotList().size(), 1);
+        QVERIFY(!ui.enemyRobotList()[0].toMap().contains("energy"));
+        QVERIFY(ui.headerData()["matchMode"].toString().startsWith("1v1"));
+        QCOMPARE(ui.mapData()["mapImageSource"].toString(),
+                 QStringLiteral("qrc:/images/rmul1v1.png"));
+
+        QTemporaryDir directory;
+        RM::MockMatchSource mock;
+        QVERIFY(mock.selectScenario("match_1v1_basic"));
+        RM::MatchRecorder recorder;
+        const QString path = directory.filePath("duel.jsonl");
+        QVERIFY(recorder.start(mock.matchSession(), path));
+        QVERIFY(mock.advanceByMs(12000));
+        QVERIFY(mock.pause());
+        recorder.stop();
+        RM::MatchReplaySource replay;
+        QVERIFY(replay.loadFromFile(path));
+        QVERIFY(replay.start());
+        QVERIFY(replay.advanceByMs(12000));
+        QCOMPARE(replay.matchSession()->matchSnapshot().profile,
+                 QStringLiteral("rmul1v1"));
+        QCOMPARE(replay.matchSession()->matchSnapshot().redTeam.robots.size(), 1);
+        QCOMPARE(replay.matchSession()->matchSnapshot().timeRemainingSec, 120);
+    }
+
     void initTestCase() {
         Q_INIT_RESOURCE(mock);
     }

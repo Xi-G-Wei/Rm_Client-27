@@ -37,6 +37,53 @@ class TestMockMatchSource : public QObject {
     Q_OBJECT
 
 private slots:
+    void duelScenariosExerciseCombatAndRecovery() {
+        const QString prefix = QDir(QStringLiteral(RM_SOURCE_DIR))
+            .absoluteFilePath(QStringLiteral("mock/1v1/"));
+        RM::MockMatchSource source;
+        QVERIFY2(source.loadFromFile(prefix + "match_1v1_basic.json"),
+                 qPrintable(source.lastError()));
+        QCOMPARE(source.matchSession()->matchSnapshot().profile,
+                 QStringLiteral("rmul1v1"));
+        QCOMPARE(source.matchSession()->matchSnapshot().redTeam.robots.size(), 1);
+        QCOMPARE(source.matchSession()->matchSnapshot().blueTeam.robots.size(), 1);
+        QVERIFY(source.start());
+        QVERIFY(source.advanceByMs(12000));
+        QCOMPARE(source.matchSession()->matchSnapshot().timeRemainingSec, 120);
+        const int before = source.matchSession()->matchSnapshot().redTeam.robots[0].ammo;
+        QVERIFY(source.setTriggerHeld(true));
+        QVERIFY(source.advanceByMs(1000));
+        QVERIFY(source.setTriggerHeld(false));
+        QVERIFY(source.matchSession()->matchSnapshot().redTeam.robots[0].ammo < before);
+        QVERIFY(source.pause());
+        QVERIFY(source.matchSession()->matchSnapshot().isPaused);
+        QVERIFY(source.resume());
+        QVERIFY(source.advanceByMs(12000));
+        QCOMPARE(source.matchSession()->matchSnapshot().redTeam.robots[0].health, 260);
+        QCOMPARE(source.matchSession()->matchSnapshot().redTeam.robots[0].moduleStates[5].toInt(), 1);
+        QVERIFY(source.advanceByMs(35000));
+        QCOMPARE(source.matchSession()->matchSnapshot().phase, RM::MatchPhase::Settlement);
+        QCOMPARE(source.matchSession()->matchSnapshot().redTeam.score, 1);
+
+        QVERIFY(source.selectScenario("match_1v1_damage"));
+        QVERIFY(source.advanceByMs(12000));
+        QVERIFY(!source.matchSession()->matchSnapshot().redTeam.robots[0].alive);
+        QVERIFY(source.advanceByMs(5000));
+        QVERIFY(source.matchSession()->matchSnapshot().redTeam.robots[0].alive);
+        QVERIFY(source.selectScenario("match_1v1_offline"));
+        QVERIFY(source.advanceByMs(5000));
+        QVERIFY(!source.matchSession()->matchSnapshot().redTeam.robots[0].online);
+        QVERIFY(source.advanceByMs(15000));
+        QVERIFY(source.matchSession()->matchSnapshot().redTeam.robots[0].online);
+        QVERIFY(source.matchSession()->matchSnapshot().blueTeam.robots[0].online);
+        QVERIFY(source.cycleScenario());
+        QCOMPARE(source.scenarioId(), QStringLiteral("match_1v1_settlement"));
+        QVERIFY(source.advanceByMs(12000));
+        QCOMPARE(source.matchSession()->matchSnapshot().blueTeam.score, 1);
+        QVERIFY(source.cycleScenario());
+        QCOMPARE(source.scenarioId(), QStringLiteral("match_1v1_basic"));
+    }
+
     void initTestCase() {
         Q_INIT_RESOURCE(mock);
     }

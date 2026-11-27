@@ -128,8 +128,9 @@ void GameDataMatchSource::refresh() {
         emit stateChanged();
         return;
     }
-    if (m_gameData->matchProfile() != MatchProfile::Rmul3v3) {
-        m_lastError = QStringLiteral("等待 RMUL 3v3 比赛配置");
+    if (m_gameData->matchProfile() != MatchProfile::Rmul3v3 &&
+        m_gameData->matchProfile() != MatchProfile::Rmul1v1) {
+        m_lastError = QStringLiteral("等待 RMUL 3v3 / 1v1 比赛配置");
         if (m_session->isValid())
             m_session->clear();
         emit stateChanged();
@@ -191,7 +192,9 @@ MatchPhase GameDataMatchSource::mapPhase(::GameStage stage) const {
 MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
     MatchSnapshot snapshot;
     snapshot.matchId = QStringLiteral("real-game-data");
-    snapshot.profile = QStringLiteral("rmul3v3");
+    const bool duel = m_gameData->matchProfile() == MatchProfile::Rmul1v1;
+    snapshot.profile = duel ? QStringLiteral("rmul1v1")
+                            : QStringLiteral("rmul3v3");
     snapshot.phase = mapPhase(m_gameData->getCurrentStage());
     snapshot.isPaused = m_gameData->is_paused();
     snapshot.timeRemainingSec = m_gameData->getGameTime();
@@ -250,7 +253,7 @@ MatchSnapshot GameDataMatchSource::buildSnapshot(QString *error) {
     snapshot.updatedAtMs =
         m_lastDataAtMs > 0 ? m_lastDataAtMs : now;
 
-    const QList<int> slotIds{1, 3, 4};
+    const QList<int> slotIds = duel ? QList<int>{3} : QList<int>{1, 3, 4};
     const auto buildRobot = [&](bool red, int slot) {
         const int id = red ? slot : 100 + slot;
         MatchRobotSnapshot robot;

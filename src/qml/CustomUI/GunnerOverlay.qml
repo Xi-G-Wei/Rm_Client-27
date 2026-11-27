@@ -8,9 +8,16 @@ Item {
     // qmllint disable unqualified
     readonly property var gameDataContext: typeof gameData !== "undefined" ? gameData : null
     // qmllint enable unqualified
-    property var customData: root.gameDataContext ? root.gameDataContext.myRobotCustomData : ({})
-    property bool uiEnabled: root.gameDataContext ? root.gameDataContext.customUIEnabled : false
-    readonly property bool currentTheme: Boolean(root.gameDataContext?.uses2027Protocol)
+    property var matchUiSource: null
+    readonly property bool matchUiActive: Boolean(root.matchUiSource?.active)
+    property var customData: root.matchUiActive
+        ? root.matchUiSource.myRobotCustomData
+        : root.gameDataContext ? root.gameDataContext.myRobotCustomData : ({})
+    property bool uiEnabled: root.matchUiActive
+        || Boolean(root.gameDataContext?.customUIEnabled)
+    readonly property bool currentTheme: root.matchUiActive
+        ? Boolean(root.matchUiSource.uses2027Protocol)
+        : Boolean(root.gameDataContext?.uses2027Protocol)
     visible: root.uiEnabled
 
     FrictionWheelStatus {
@@ -35,6 +42,7 @@ Item {
 
     SuperCapacitorBar {
         id: capPanel
+        visible: !root.currentTheme && root.customData.superCapEnergy > 0
         anchors.right: parent.right
         anchors.rightMargin: 15
         anchors.verticalCenter: parent.verticalCenter
@@ -43,6 +51,7 @@ Item {
 
     GimbalAngleIndicator {
         id: anglePanel
+        visible: !root.currentTheme && root.customData.gimbalChassisAngle !== undefined
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 20
