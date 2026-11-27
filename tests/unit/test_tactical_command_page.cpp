@@ -83,6 +83,61 @@ class TestTacticalCommandPage : public QObject {
   Q_OBJECT
 
 private slots:
+  void testPilotModuleLabelsStayInsideCard_data() {
+    QTest::addColumn<QSize>("cardSize");
+    QTest::addColumn<bool>("buffsVisible");
+    for (const QSize size : {QSize(360, 131), QSize(452, 164), QSize(678, 246)}) {
+      const QByteArray prefix = QByteArray::number(size.width());
+      QTest::newRow((prefix + "-buffs").constData()) << size << true;
+      QTest::newRow((prefix + "-no-buffs").constData()) << size << false;
+    }
+  }
+
+  void testPilotModuleLabelsStayInsideCard() {
+    QFETCH(QSize, cardSize);
+    QFETCH(bool, buffsVisible);
+    RM::MockMatchSource source;
+    QVERIFY(source.loadFromFile(":/mock/3v3/match_3v3_basic.json"));
+    if (!buffsVisible) {
+      auto snapshot = source.matchSession()->matchSnapshot();
+      snapshot.redTeam.robots[1].buffTimedData.clear();
+      QVERIFY(source.matchSession()->replaceSnapshot(snapshot));
+    }
+    RM::MatchUiProjection projection(source.matchSession());
+    QQuickView view;
+    view.rootContext()->setContextProperty("mockUiSource", &projection);
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.resize(cardSize);
+    view.setSource(QUrl("qrc:/qml/LeftBottomPanel.qml"));
+    QVERIFY(view.status() == QQuickView::Ready);
+    view.show();
+    auto *card = view.rootObject()->findChild<QQuickItem *>("pilotVehicleCard");
+    QVERIFY(card);
+    QTest::qWait(60);
+    QList<QQuickItem *> labels;
+    const auto collect = [&](auto &&self, QQuickItem *item) -> void {
+      if (item->objectName() == "pilotModuleLabel")
+        labels.append(item);
+      for (auto *child : item->childItems())
+        self(self, child);
+    };
+    collect(collect, card);
+    QCOMPARE(labels.size(), 10);
+    for (auto *label : labels) {
+      const auto rect = label->mapRectToItem(card, label->boundingRect());
+      QVERIFY2(rect.bottom() <= card->height() - 6,
+               qPrintable(label->property("text").toString()));
+      QVERIFY(rect.top() >= 0);
+      QVERIFY(rect.left() >= 0 && rect.right() <= card->width());
+    }
+    const QString dir = qEnvironmentVariable("RM_1V1_SCREENSHOT_DIR");
+    if (!dir.isEmpty()) {
+      QDir().mkpath(dir);
+      QVERIFY(view.grabWindow().save(dir + "/vehicle-" +
+          QString::number(cardSize.width()) + (buffsVisible ? "-buffs.png" : "-plain.png")));
+    }
+  }
+
   void testPilotHudIgnoresRemovedAimDecorations() {
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

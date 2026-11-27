@@ -80,12 +80,15 @@ Rectangle {
     }
 
     ColumnLayout {
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: moduleDivider.top
         anchors.leftMargin: 13 * root.unit
         anchors.rightMargin: 12 * root.unit
         anchors.topMargin: 8 * root.unit
-        anchors.bottomMargin: 9 * root.unit
-        spacing: 5 * root.unit
+        anchors.bottomMargin: 4 * root.unit
+        spacing: 3 * root.unit
 
         RowLayout {
             Layout.fillWidth: true
@@ -160,7 +163,9 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 74 * root.unit
+            Layout.fillHeight: true
+            Layout.minimumHeight: 48 * root.unit
+            Layout.preferredHeight: 64 * root.unit
             spacing: 11 * root.unit
             Image {
                 objectName: "pilotVehiclePortrait"
@@ -213,37 +218,53 @@ Rectangle {
             Item { Layout.fillWidth: true }
         }
 
-        Item { Layout.fillHeight: true }
-        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: "#46606d" }
+    }
 
-        GridLayout {
-            Layout.fillWidth: true
-            columns: 5
-            rowSpacing: 2 * root.unit
-            columnSpacing: 5 * root.unit
-            Repeater {
-                model: ["机器人", "遥控器", "自定义", "图传", "RFID", "模块", "UWB", "底盘", "17mm", "42mm"]
-                RowLayout {
-                    id: moduleRow
-                    required property int index
-                    required property string modelData
-                    Layout.preferredWidth: 1
+    Rectangle {
+        id: moduleDivider
+        anchors.left: modules.left
+        anchors.right: modules.right
+        anchors.bottom: modules.top
+        anchors.bottomMargin: 4 * root.unit
+        height: 1
+        color: "#46606d"
+    }
+
+    GridLayout {
+        id: modules
+        objectName: "pilotModuleGrid"
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: 13 * root.unit
+        anchors.rightMargin: 12 * root.unit
+        anchors.bottomMargin: 10 * root.unit
+        columns: 5
+        rowSpacing: 2 * root.unit
+        columnSpacing: 5 * root.unit
+        Repeater {
+            model: ["机器人", "遥控器", "自定义", "图传", "RFID", "模块", "UWB", "底盘", "17mm", "42mm"]
+            RowLayout {
+                id: moduleRow
+                required property int index
+                required property string modelData
+                Layout.preferredWidth: 1
+                Layout.fillWidth: true
+                spacing: 4 * root.unit
+                Rectangle {
+                    Layout.preferredWidth: 5 * root.unit
+                    Layout.preferredHeight: 5 * root.unit
+                    radius: width / 2
+                    color: !root.hasModuleData ? "#78919f"
+                        : root.moduleStates[moduleRow.index] === 0 ? "#81d6b5" : "#eb877a"
+                }
+                Text {
+                    objectName: "pilotModuleLabel"
                     Layout.fillWidth: true
-                    spacing: 4 * root.unit
-                    Rectangle {
-                        Layout.preferredWidth: 5 * root.unit
-                        Layout.preferredHeight: 5 * root.unit
-                        radius: width / 2
-                        color: !root.hasModuleData ? "#78919f"
-                            : root.moduleStates[moduleRow.index] === 0 ? "#81d6b5" : "#eb877a"
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        text: moduleRow.modelData
-                        elide: Text.ElideRight
-                        color: "#d1e0e9"
-                        font.pixelSize: 13 * root.unit
-                    }
+                    text: moduleRow.modelData
+                    elide: Text.ElideRight
+                    color: "#d1e0e9"
+                    font.pixelSize: 13 * root.unit
                 }
             }
         }
