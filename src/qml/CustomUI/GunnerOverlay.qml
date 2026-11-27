@@ -49,12 +49,4 @@ Item {
         customData: root.customData
     }
 
-    GimbalAngleIndicator {
-        id: anglePanel
-        visible: !root.currentTheme && root.customData.gimbalChassisAngle !== undefined
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 20
-        customData: root.customData
-    }
 }

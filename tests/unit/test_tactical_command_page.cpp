@@ -83,6 +83,23 @@ class TestTacticalCommandPage : public QObject {
   Q_OBJECT
 
 private slots:
+  void testPilotHudIgnoresRemovedAimDecorations() {
+    QQuickView view;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.resize(860, 600);
+    view.setSource(QUrl("qrc:/qml/CentralAimingHUD.qml"));
+    QVERIFY(view.status() == QQuickView::Ready);
+    view.show();
+    QTest::qWait(60);
+    const QImage before = view.grabWindow();
+    QVERIFY(!before.isNull());
+    view.rootObject()->setProperty("customData", QVariantMap{
+        {"gimbalChassisAngle", 12.5}, {"targetDistance", 12},
+        {"ballisticCompensation", -2}});
+    QTest::qWait(60);
+    QCOMPARE(view.grabWindow(), before);
+  }
+
   void testDuelUiAndModeSwitch_data() {
     QTest::addColumn<QSize>("viewport");
     QTest::newRow("720p") << QSize(1280, 720);

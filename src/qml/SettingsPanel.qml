@@ -277,14 +277,14 @@ Rectangle {
                         objectName: "matchProfileSelector"
                         Layout.fillWidth: true
                         Layout.preferredHeight: root.comboBoxHeight
-                        model: ["2026 联调", "2027 超级对抗赛", "2027 联盟赛 3V3", "2027 联盟赛 1V1"]
-                        currentIndex: root.matchProfileIndex
-                        onActivated: function(index) { root.matchProfileRequested(index) }
+                        model: ["2027 超级对抗赛", "2027 联盟赛 3V3", "2027 联盟赛 1V1"]
+                        currentIndex: Math.max(0, root.matchProfileIndex - 1)
+                        onActivated: function(index) { root.matchProfileRequested(index + 1) }
                     }
 
                     // 机器人视角区块标题
                     Text {
-                        text: root.matchProfileIndex === 0 ? "机器人视角" : "机器人视角 · 只读联调"
+                        text: "机器人视角"
                         color: "white"
                         font.bold: true
                         font.pixelSize: root.height * 0.04

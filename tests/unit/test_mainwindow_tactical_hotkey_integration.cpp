@@ -78,6 +78,28 @@ private slots:
         Q_ARG(int, static_cast<int>(RM::MatchProfile::Rmul1v1))));
     QCOMPARE(data->matchProfile(), RM::MatchProfile::Rmul1v1);
     QCOMPARE(mock->scenarioId(), QStringLiteral("match_1v1_basic"));
+    auto *screen = window.findChild<QQuickWidget *>("tacticalPageWidget");
+    QVERIFY(screen && screen->rootObject());
+    QVERIFY(screen->rootObject()->property("uiFirstMode").toBool());
+    QVERIFY(QMetaObject::invokeMethod(&window, "onMatchProfileRequested",
+        Q_ARG(int, static_cast<int>(RM::MatchProfile::Rmuc2027))));
+    QCOMPARE(data->matchProfile(), RM::MatchProfile::Rmuc2027);
+    QVERIFY(mock->isPaused());
+    QVERIFY(!screen->rootObject()->property("uiFirstMode").toBool());
+    QCOMPARE(screen->rootObject()->property("tacticalMapBackgroundSource").toString(),
+             QStringLiteral("qrc:/images/rmuc2027.png"));
+    auto snapshot = mock->matchSession()->matchSnapshot();
+    snapshot.timeRemainingSec = 70;
+    QVERIFY(mock->matchSession()->replaceSnapshot(snapshot));
+    QCOMPARE(data->matchProfile(), RM::MatchProfile::Rmuc2027);
+    QTest::keyClick(window.centralWidget(), Qt::Key_F5);
+    QVERIFY(mock->isPaused());
+    QVERIFY(QMetaObject::invokeMethod(&window, "onMatchProfileRequested",
+        Q_ARG(int, static_cast<int>(RM::MatchProfile::Rmul3v3))));
+    QCOMPARE(data->matchProfile(), RM::MatchProfile::Rmul3v3);
+    QVERIFY(screen->rootObject()->property("uiFirstMode").toBool());
+    QVERIFY(mock->isRunning());
+    QCOMPARE(mock->scenarioId(), QStringLiteral("match_3v3_basic"));
   }
 
   void initTestCase() {

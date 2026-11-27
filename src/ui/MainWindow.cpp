@@ -2528,6 +2528,8 @@ void MainWindow::createCenterArea() {
   if (m_matchUiProjection && (m_matchUiProjection->mockMode() ||
                               m_matchUiProjection->replayMode())) {
     const auto syncSimulatedProfile = [this]() {
+      if (!m_matchUiProjection->isEnabled())
+        return;
       const auto *session = m_matchSourceController->matchSession();
       if (!session || !session->isValid())
         return;
@@ -5585,7 +5587,8 @@ void MainWindow::handleKeyboardMouseButton(Qt::MouseButton button,
                                            bool pressed) {
   if (button == Qt::LeftButton && m_mockMatchSource) {
     const bool allowed =
-        pressed && !m_tacticalMode && !isKeyboardMouseControlBlocked();
+        pressed && m_matchUiProjection && m_matchUiProjection->active()
+        && !m_tacticalMode && !isKeyboardMouseControlBlocked();
     m_mockMatchSource->setTriggerHeld(allowed);
     return;
   }
@@ -6922,7 +6925,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
 
   if (event->type() == QEvent::ShortcutOverride) {
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-    if (m_mockMatchSource && !keyEvent->isAutoRepeat() &&
+    if (m_mockMatchSource && m_matchUiProjection && m_matchUiProjection->active()
+        && !keyEvent->isAutoRepeat() &&
         (keyEvent->key() == Qt::Key_F5 ||
          keyEvent->key() == Qt::Key_F6 ||
          keyEvent->key() == Qt::Key_F7)) {
@@ -6992,7 +6996,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     }
   } else if (event->type() == QEvent::KeyPress) {
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-    if (m_mockMatchSource && !keyEvent->isAutoRepeat()) {
+    if (m_mockMatchSource && m_matchUiProjection && m_matchUiProjection->active()
+        && !keyEvent->isAutoRepeat()) {
       if (keyEvent->key() == Qt::Key_F5) {
         m_mockMatchSource->togglePause();
         event->accept();
@@ -8361,11 +8366,32 @@ void MainWindow::onMatchProfileRequested(int index) {
     return;
 
   if (m_mockMatchSource) {
-    if (index == static_cast<int>(RM::MatchProfile::Rmul1v1))
-      m_mockMatchSource->selectScenario(QStringLiteral("match_1v1_basic"));
-    else if (index == static_cast<int>(RM::MatchProfile::Rmul3v3))
-      m_mockMatchSource->selectScenario(QStringLiteral("match_3v3_basic"));
+    resetKeyboardMouseControlState(true);
+    setCommandSummaryVisible(false);
+    const bool rmul = index == static_cast<int>(RM::MatchProfile::Rmul1v1)
+        || index == static_cast<int>(RM::MatchProfile::Rmul3v3);
+    if (rmul) {
+      m_matchUiProjection->setEnabled(true);
+      const QString scenario = index == static_cast<int>(RM::MatchProfile::Rmul1v1)
+          ? QStringLiteral("match_1v1_basic") : QStringLiteral("match_3v3_basic");
+      m_mockMatchSource->selectScenario(scenario);
+    } else {
+      m_mockMatchSource->pause();
+      m_matchUiProjection->setEnabled(false);
+      m_gameData->setMatchProfile(static_cast<RM::MatchProfile>(index));
+      const int robotId = availableRobotId(m_gameData->getCurrentRobotId());
+      m_gameData->setCurrentRobotId(static_cast<quint8>(robotId));
+      m_selectedRobotTypeFromSettings = settingsRobotTypeLabel(robotId);
+    }
+    if (m_qmlTopInfoBar && m_qmlTopInfoBar->rootObject()) {
+      QObject *dashboardSource = rmul
+          ? static_cast<QObject *>(m_matchUiProjection)
+          : static_cast<QObject *>(m_tacticalAnalyzer);
+      m_qmlTopInfoBar->rootObject()->setProperty(
+          "tacticalSource", QVariant::fromValue(dashboardSource));
+    }
     syncSettingsPanelState();
+    applyPanelResolutionScaling();
     return;
   }
 

@@ -14,6 +14,7 @@ struct MatchRobotSnapshot;
 class MatchUiProjection : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY updated)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY updated)
     Q_PROPERTY(bool mockMode READ mockMode CONSTANT)
     Q_PROPERTY(bool replayMode READ replayMode CONSTANT)
     Q_PROPERTY(QString sourceKind READ sourceKind CONSTANT)
@@ -97,6 +98,8 @@ public:
                                const QString &sourceKind = QStringLiteral("mock"));
 
     bool active() const;
+    bool isEnabled() const;
+    void setEnabled(bool enabled);
     bool mockMode() const;
     bool replayMode() const;
     QString sourceKind() const;
@@ -164,6 +167,7 @@ private:
     MatchRobotSnapshot operatorRobot() const;
 
     MatchSession *m_session = nullptr;
+    bool m_enabled = true;
     QString m_sourceKind = QStringLiteral("mock");
 };
 

@@ -8,6 +8,25 @@ class TestSettingsPanelShortcuts : public QObject {
   Q_OBJECT
 
 private slots:
+  void testCompetitionSelectorHidesLegacyAndPreservesEnumMapping() {
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl("qrc:/qml/SettingsPanel.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> panel(component.create());
+    QVERIFY(panel);
+    auto *selector = panel->findChild<QObject *>("matchProfileSelector");
+    QVERIFY(selector);
+    QCOMPARE(selector->property("count").toInt(), 3);
+    QSignalSpy requested(panel.data(), SIGNAL(matchProfileRequested(int)));
+    for (int index = 0; index < 3; ++index) {
+      panel->setProperty("matchProfileIndex", index + 1);
+      QCOMPARE(selector->property("currentIndex").toInt(), index);
+      QVERIFY(!selector->property("currentText").toString().contains("联调"));
+      QVERIFY(QMetaObject::invokeMethod(selector, "activated", Q_ARG(int, index)));
+      QCOMPARE(requested.takeFirst()[0].toInt(), index + 1);
+    }
+  }
+
   void initTestCase() {
     Q_INIT_RESOURCE(qml);
     Q_INIT_RESOURCE(resources);

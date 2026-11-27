@@ -184,7 +184,18 @@ MatchUiProjection::MatchUiProjection(MatchSession *session,
 }
 
 bool MatchUiProjection::active() const {
-    return m_session && m_session->isValid();
+    return m_enabled && m_session && m_session->isValid();
+}
+
+bool MatchUiProjection::isEnabled() const {
+    return m_enabled;
+}
+
+void MatchUiProjection::setEnabled(bool enabled) {
+    if (m_enabled == enabled)
+        return;
+    m_enabled = enabled;
+    emit updated();
 }
 
 bool MatchUiProjection::mockMode() const {
